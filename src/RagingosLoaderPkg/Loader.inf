@@ -7,7 +7,7 @@
   ENTRY_POINT                    = UefiMain
 
 [Sources]
-  main.c
+  main.cpp
 
 [Packages]
   MdePkg/MdePkg.dec
