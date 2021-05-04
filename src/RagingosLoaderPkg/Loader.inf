@@ -7,7 +7,7 @@
   ENTRY_POINT                    = UefiMain
 
 [Sources]
-  main.cpp
+  main.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -19,3 +19,6 @@
 [Guids]
 
 [Protocols]
+  gEfiLoadedImageProtocolGuid
+  gEfiLoadFileProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
