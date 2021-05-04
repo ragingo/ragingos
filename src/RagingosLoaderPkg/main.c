@@ -86,29 +86,25 @@ EFI_STATUS SaveMemoryMap(struct MemoryMap* map, EFI_FILE_PROTOCOL* file) {
 }
 
 EFI_STATUS OpenRootDir(EFI_HANDLE image_handle, EFI_FILE_PROTOCOL** root) {
-    EFI_LOADED_IMAGE_PROTOCOL* loaded_image;
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs;
-
+    EFI_LOADED_IMAGE_PROTOCOL* loaded_image = NULL;
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs = NULL;
     gBS->OpenProtocol(image_handle, &gEfiLoadedImageProtocolGuid, (VOID**)&loaded_image, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-
     gBS->OpenProtocol(loaded_image->DeviceHandle, &gEfiSimpleFileSystemProtocolGuid, (VOID**)&fs, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-
     fs->OpenVolume(fs, root);
-
     return EFI_SUCCESS;
 }
 
 EFI_STATUS EFIAPI UefiMain(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE* system_table) {
-    Print(L"Hello, Mikan World!\n");
+    Print(L"Hello, ragingos World!\n");
 
     CHAR8 memmap_buf[4096 * 4];
     struct MemoryMap memmap = { sizeof(memmap_buf), memmap_buf, 0, 0, 0, 0 };
     GetMemoryMap(&memmap);
 
-    EFI_FILE_PROTOCOL* root_dir;
+    EFI_FILE_PROTOCOL* root_dir = NULL;
     OpenRootDir(image_handle, &root_dir);
 
-    EFI_FILE_PROTOCOL* memmap_file;
+    EFI_FILE_PROTOCOL* memmap_file = NULL;
     root_dir->Open(root_dir, &memmap_file, L"\\memmap", EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE, 0);
 
     SaveMemoryMap(&memmap, memmap_file);
