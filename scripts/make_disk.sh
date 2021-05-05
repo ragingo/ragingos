@@ -8,6 +8,8 @@ readonly VOLUME_NAME=RAGINGOS
 readonly DISK_FILE_PATH=$OUTPUT_PATH/disk.img
 # .efi
 readonly EFI_FILE_PATH=$1
+# kernel.elf
+readonly KERNEL_FILE_PATH=$OUTPUT_PATH/kernel/kernel.elf
 # マウントポイント
 readonly MOUNT_POINT=./build/mnt
 
@@ -32,6 +34,7 @@ sudo mount -o loop $DISK_FILE_PATH $MOUNT_POINT
 
 sudo mkdir -p $MOUNT_POINT/EFI/BOOT
 sudo cp "$EFI_FILE_PATH" "$MOUNT_POINT/EFI/BOOT/BOOTX64.EFI"
+sudo cp "$KERNEL_FILE_PATH" "$MOUNT_POINT/$(basename $KERNEL_FILE_PATH)"
 
 sudo umount $MOUNT_POINT
 rm -r $MOUNT_POINT

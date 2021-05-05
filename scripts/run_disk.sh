@@ -17,4 +17,5 @@ popd > /dev/null
 qemu-system-x86_64 \
   -drive if=pflash,file=$OUTPUT_PATH/OVMF_CODE.fd \
   -drive if=pflash,file=$OUTPUT_PATH/OVMF_VARS.fd \
-  -hda $OUTPUT_PATH/disk.img
+  -hda $OUTPUT_PATH/disk.img \
+  -monitor stdio
