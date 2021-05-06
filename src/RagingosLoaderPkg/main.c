@@ -11,6 +11,10 @@
 
 #define RAGINGOS_KERNEL_BASE_ADDRESS 0x100000
 
+void Halt(void) {
+  while (1) __asm__("hlt");
+}
+
 struct MemoryMap {
     UINTN buffer_size;
     VOID* buffer;
@@ -74,7 +78,10 @@ EFI_STATUS SaveMemoryMap(struct MemoryMap* map, EFI_FILE_PROTOCOL* file) {
 
     CHAR8* header = "Index, Type, Type(name), PhysicalStart, NumberOfPages, Attribute\n";
     len = AsciiStrLen(header);
-    file->Write(file, &len, header);
+    EFI_STATUS status = file->Write(file, &len, header);
+    if (EFI_ERROR(status)) {
+        return status;
+    }
 
     Print(L"map->buffer = %08lx, map->map_size = %08lx\n", map->buffer, map->map_size);
 
@@ -83,7 +90,10 @@ EFI_STATUS SaveMemoryMap(struct MemoryMap* map, EFI_FILE_PROTOCOL* file) {
     for (iter = (EFI_PHYSICAL_ADDRESS)map->buffer, i = 0; iter < (EFI_PHYSICAL_ADDRESS)map->buffer + map->map_size; iter += map->descriptor_size, i++) {
         EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)iter;
         len = AsciiSPrint(buf, sizeof(buf), "%u, %x, %-ls, %08lx, %lx, %lx\n", i, desc->Type, GetMemoryTypeUnicode(desc->Type), desc->PhysicalStart, desc->NumberOfPages, desc->Attribute & 0xffffflu);
-        file->Write(file, &len, buf);
+        status = file->Write(file, &len, buf);
+        if (EFI_ERROR(status)) {
+            return status;
+        }
     }
 
     return EFI_SUCCESS;
@@ -92,29 +102,51 @@ EFI_STATUS SaveMemoryMap(struct MemoryMap* map, EFI_FILE_PROTOCOL* file) {
 EFI_STATUS OpenRootDir(EFI_HANDLE image_handle, EFI_FILE_PROTOCOL** root) {
     EFI_LOADED_IMAGE_PROTOCOL* loaded_image = NULL;
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs = NULL;
-    gBS->OpenProtocol(image_handle, &gEfiLoadedImageProtocolGuid, (VOID**)&loaded_image, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-    gBS->OpenProtocol(loaded_image->DeviceHandle, &gEfiSimpleFileSystemProtocolGuid, (VOID**)&fs, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-    fs->OpenVolume(fs, root);
-    return EFI_SUCCESS;
+    EFI_STATUS status;
+    status = gBS->OpenProtocol(image_handle, &gEfiLoadedImageProtocolGuid, (VOID**)&loaded_image, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+    if (EFI_ERROR(status)) {
+        return status;
+    }
+    status = gBS->OpenProtocol(loaded_image->DeviceHandle, &gEfiSimpleFileSystemProtocolGuid, (VOID**)&fs, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+    if (EFI_ERROR(status)) {
+        return status;
+    }
+    return fs->OpenVolume(fs, root);
 }
 
 void BootKernel(EFI_HANDLE image_handle, struct MemoryMap memmap, EFI_FILE_PROTOCOL* root_dir, EFI_PHYSICAL_ADDRESS frame_buffer_base, UINTN frame_buffer_size) {
     EFI_FILE_PROTOCOL* kernel_file = NULL;
-    root_dir->Open(root_dir, &kernel_file, L"\\kernel.elf", EFI_FILE_MODE_READ, 0);
+    EFI_STATUS status = root_dir->Open(root_dir, &kernel_file, L"\\kernel.elf", EFI_FILE_MODE_READ, 0);
+    if (EFI_ERROR(status)) {
+        Print(L"failed to open file '\\kernel.elf': %r\n", status);
+        Halt();
+    }
 
     UINTN file_info_size = sizeof(EFI_FILE_INFO) + sizeof(CHAR16) * 12;
     UINT8 file_info_buffer[file_info_size];
-    kernel_file->GetInfo(kernel_file, &gEfiFileInfoGuid, &file_info_size, file_info_buffer);
+    status = kernel_file->GetInfo(kernel_file, &gEfiFileInfoGuid, &file_info_size, file_info_buffer);
+    if (EFI_ERROR(status)) {
+        Print(L"failed to get file information: %r\n", status);
+        Halt();
+    }
 
     EFI_FILE_INFO* file_info = (EFI_FILE_INFO*)file_info_buffer;
     UINTN kernel_file_size = file_info->FileSize;
 
     EFI_PHYSICAL_ADDRESS kernel_base_addr = RAGINGOS_KERNEL_BASE_ADDRESS;
-    gBS->AllocatePages(AllocateAddress, EfiLoaderData, (kernel_file_size + 0xfff) / 0x1000, &kernel_base_addr);
-    kernel_file->Read(kernel_file, &kernel_file_size, (VOID*)kernel_base_addr);
+    status = gBS->AllocatePages(AllocateAddress, EfiLoaderData, (kernel_file_size + 0xfff) / 0x1000, &kernel_base_addr);
+    if (EFI_ERROR(status)) {
+        Print(L"failed to allocate pages: %r", status);
+        Halt();
+    }
+    status = kernel_file->Read(kernel_file, &kernel_file_size, (VOID*)kernel_base_addr);
+    if (EFI_ERROR(status)) {
+        Print(L"error: %r", status);
+        Halt();
+    }
     Print(L"Kernel: 0x%0lx (%lu bytes)\n", kernel_base_addr, kernel_file_size);
 
-    EFI_STATUS status = gBS->ExitBootServices(image_handle, memmap.map_key);
+    status = gBS->ExitBootServices(image_handle, memmap.map_key);
     if (EFI_ERROR(status)) {
         status = GetMemoryMap(&memmap);
         if (EFI_ERROR(status)) {
@@ -141,10 +173,17 @@ EFI_STATUS OpenGOP(EFI_HANDLE image_handle, EFI_GRAPHICS_OUTPUT_PROTOCOL** gop) 
     UINTN num_gop_handles = 0;
     EFI_HANDLE* gop_handles = NULL;
 
-    gBS->LocateHandleBuffer(ByProtocol, &gEfiGraphicsOutputProtocolGuid, NULL, &num_gop_handles, &gop_handles);
+    EFI_STATUS status = gBS->LocateHandleBuffer(ByProtocol, &gEfiGraphicsOutputProtocolGuid, NULL, &num_gop_handles, &gop_handles);
+    if (EFI_ERROR(status)) {
+        return status;
+    }
 
     if (num_gop_handles > 0 && gop_handles) {
-        gBS->OpenProtocol(gop_handles[0], &gEfiGraphicsOutputProtocolGuid, (VOID**)gop, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+        status = gBS->OpenProtocol(gop_handles[0], &gEfiGraphicsOutputProtocolGuid, (VOID**)gop, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+        if (EFI_ERROR(status)) {
+            FreePool(gop_handles);
+            return status;
+        }
     }
 
     FreePool(gop_handles);
@@ -172,21 +211,35 @@ const CHAR16* GetPixelFormatUnicode(EFI_GRAPHICS_PIXEL_FORMAT fmt) {
 EFI_STATUS EFIAPI UefiMain(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE* system_table) {
     Print(L"Hello, ragingos World!\n");
 
+    EFI_STATUS status;
+
     CHAR8 memmap_buf[4096 * 4];
     struct MemoryMap memmap = { sizeof(memmap_buf), memmap_buf, 0, 0, 0, 0 };
-    GetMemoryMap(&memmap);
+    status = GetMemoryMap(&memmap);
+    if (EFI_ERROR(status)) {
+        Print(L"failed to get memory map: %r\n", status);
+        Halt();
+    }
 
     EFI_FILE_PROTOCOL* root_dir = NULL;
-    OpenRootDir(image_handle, &root_dir);
+    status = OpenRootDir(image_handle, &root_dir);
+    if (EFI_ERROR(status)) {
+        Print(L"failed to open root directory: %r\n", status);
+        Halt();
+    }
 
     EFI_FILE_PROTOCOL* memmap_file = NULL;
     root_dir->Open(root_dir, &memmap_file, L"\\memmap", EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE, 0);
 
-    SaveMemoryMap(&memmap, memmap_file);
+    status = SaveMemoryMap(&memmap, memmap_file);
     memmap_file->Close(memmap_file);
 
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop;
-    OpenGOP(image_handle, &gop);
+    status = OpenGOP(image_handle, &gop);
+    if (EFI_ERROR(status)) {
+        Print(L"failed to open GOP: %r\n", status);
+        Halt();
+    }
     const EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* info = gop->Mode->Info;
     Print(L"Resolution: %ux%u, Pixel Format: %s, %u pixels/line\n", info->HorizontalResolution, info->VerticalResolution, GetPixelFormatUnicode(info->PixelFormat), info->PixelsPerScanLine);
     Print(L"Frame Buffer: 0x%0lx - 0x%0lx, Size: %lu bytes\n", gop->Mode->FrameBufferBase, gop->Mode->FrameBufferBase + gop->Mode->FrameBufferSize, gop->Mode->FrameBufferSize);
