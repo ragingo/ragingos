@@ -98,7 +98,7 @@ EFI_STATUS OpenRootDir(EFI_HANDLE image_handle, EFI_FILE_PROTOCOL** root) {
     return EFI_SUCCESS;
 }
 
-void BootKernel(EFI_HANDLE image_handle, struct MemoryMap memmap, EFI_FILE_PROTOCOL* root_dir) {
+void BootKernel(EFI_HANDLE image_handle, struct MemoryMap memmap, EFI_FILE_PROTOCOL* root_dir, EFI_PHYSICAL_ADDRESS frame_buffer_base, UINTN frame_buffer_size) {
     EFI_FILE_PROTOCOL* kernel_file = NULL;
     root_dir->Open(root_dir, &kernel_file, L"\\kernel.elf", EFI_FILE_MODE_READ, 0);
 
@@ -132,9 +132,9 @@ void BootKernel(EFI_HANDLE image_handle, struct MemoryMap memmap, EFI_FILE_PROTO
 
     UINT64 entry_addr = *(UINT64*)(kernel_base_addr + 24);
 
-    typedef void EntryPointType(void);
+    typedef void EntryPointType(UINT64, UINT64);
     EntryPointType* entry_point = (EntryPointType*)entry_addr;
-    entry_point();
+    entry_point(frame_buffer_base, frame_buffer_size);
 }
 
 EFI_STATUS OpenGOP(EFI_HANDLE image_handle, EFI_GRAPHICS_OUTPUT_PROTOCOL** gop) {
@@ -196,7 +196,7 @@ EFI_STATUS EFIAPI UefiMain(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE* system_tab
         frame_buffer[i] = 0xff;
     }
 
-    BootKernel(image_handle, memmap, root_dir);
+    BootKernel(image_handle, memmap, root_dir, gop->Mode->FrameBufferBase, gop->Mode->FrameBufferSize);
 
     Print(L"All done\n");
 

@@ -4,7 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "~/edk2/**"
+                "~/edk2/**",
+                "~/osbook/devenv/x86_64-elf/include/c++/v1",
+                "~/osbook/devenv/x86_64-elf/include"
             ],
             "defines": [],
             "cStandard": "c17",
