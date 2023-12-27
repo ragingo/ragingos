@@ -2,15 +2,32 @@
 
 sudo apt update
 sudo apt upgrade
-sudo apt install -y ansible
 
-# https://astherier.com/blog/2020/08/run-gui-apps-on-wsl2/
-sudo apt install libgl1-mesa-dev xorg-dev
-
-pushd ~
 git clone https://github.com/uchan-nos/mikanos-build.git osbook
-
-cd devenv
+sudo apt install -y ansible
+pushd osbook/devenv
 ansible-playbook -K -i ansible_inventory ansible_provision.yml
+popd
+iasl -v
+ls ~/edk2
+source ~/.profile
 
-popd # ~
+mkdir workspace
+pushd workspace
+git clone https://github.com/uchan-nos/mikanos.git
+popd
+
+pushd edk2
+ln -s $HOME/workspace/mikanos/MikanLoaderPkg ./
+ls MikanLoaderPkg/Main.c
+source edksetup.sh
+vi Conf/target.txt
+build
+ls Build/MikanLoaderX64/DEBUG_CLANG38/X64/Loader.efi
+popd
+
+source $HOME/osbook/devenv/buildenv.sh
+pushd $HOME/workspace/mikanos
+./build.sh
+./build.sh run
+popd
