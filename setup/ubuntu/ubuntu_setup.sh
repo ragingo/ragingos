@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+# WSL2 Ubuntu 20.04 で動作確認した
+
 sudo apt update
 sudo apt upgrade
 
@@ -22,7 +24,7 @@ pushd edk2
 ln -s $HOME/workspace/mikanos/MikanLoaderPkg ./
 ls MikanLoaderPkg/Main.c
 source edksetup.sh
-vi Conf/target.txt
+vi Conf/target.txt # MikanLoaderPkg/MikanLoaderPkg.dsc, CLANG38, X64
 build
 ls Build/MikanLoaderX64/DEBUG_CLANG38/X64/Loader.efi
 popd
