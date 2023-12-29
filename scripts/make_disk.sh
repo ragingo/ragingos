@@ -23,7 +23,7 @@ qemu-img create -f raw $DISK_FILE_PATH 200M
 
 # イメージファイルを FAT でフォーマット
 # https://man7.org/linux/man-pages/man8/mkfs.fat.8.html
-mkfs.fat -n "$VOLUME_NAME" -s 2 -F 32 $DISK_FILE_PATH
+mkfs.fat -n "$VOLUME_NAME" -s 2 -f 2 -R 32 -F 32 $DISK_FILE_PATH
 
 # マウント先ディレクトリを作成
 mkdir -p $MOUNT_POINT
