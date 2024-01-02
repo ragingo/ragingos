@@ -15,7 +15,7 @@ BraceWrapping:
     AfterUnion: false
     AfterExternBlock: false
     BeforeCatch: false
-    BeforeElse: true
+    BeforeElse: false
     IndentBraces: false
     SplitEmptyFunction: false
     SplitEmptyRecord: false
@@ -34,7 +34,7 @@ IncludeCategories:
     Priority:        1
   - Regex:           '^".+'
     Priority:        2
-IndentCaseLabels: true
+IndentCaseLabels: false
 IndentPPDirectives: 'AfterHash'
 IndentWidth: 4
 KeepEmptyLinesAtTheStartOfBlocks: true
