@@ -169,7 +169,7 @@ EFI_STATUS EFIAPI UefiMain(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE* system_tab
     Print(L"Hello, Mikan World!\n");
 
     CHAR8 memmap_buf[4096 * 4];
-    struct MemoryMap memmap = {sizeof(memmap_buf), memmap_buf, 0, 0, 0, 0};
+    struct MemoryMap memmap = { sizeof(memmap_buf), memmap_buf, 0, 0, 0, 0 };
     status = GetMemoryMap(&memmap);
     if (EFI_ERROR(status)) {
         Print(L"failed to get memory map: %r\n", status);
@@ -272,8 +272,8 @@ EFI_STATUS EFIAPI UefiMain(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE* system_tab
     UINT64 entry_addr = *(UINT64*)(kernel_base_addr + 24);
 
     // #@@range_begin(pass_frame_buffer_config)
-    struct FrameBufferConfig config = {(UINT8*)gop->Mode->FrameBufferBase, gop->Mode->Info->PixelsPerScanLine,
-                                       gop->Mode->Info->HorizontalResolution, gop->Mode->Info->VerticalResolution, 0};
+    struct FrameBufferConfig config = { (UINT8*)gop->Mode->FrameBufferBase, gop->Mode->Info->PixelsPerScanLine,
+                                        gop->Mode->Info->HorizontalResolution, gop->Mode->Info->VerticalResolution, 0 };
     switch (gop->Mode->Info->PixelFormat) {
     case PixelRedGreenBlueReserved8BitPerColor:
         config.pixel_format = kPixelRGBResv8BitPerColor;
