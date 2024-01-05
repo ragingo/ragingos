@@ -69,6 +69,32 @@ std::string_view osabiToString(uint8_t value) {
     }
 }
 
+std::string_view typeToString(uint16_t value) {
+    switch (value)
+    {
+    case ET_NONE:
+        return "None";
+    case ET_REL:
+        return "Relocatable";
+    case ET_EXEC:
+        return "Executable";
+    case ET_DYN:
+        return "Shared Object";
+    case ET_CORE:
+        return "Core";
+    }
+
+    if (value >= ET_LOOS && value <= ET_HIOS) {
+        return "OS Specific";
+    }
+
+    if (value >= ET_LOPROC && value <= ET_HIPROC) {
+        return "Processor Specific";
+    }
+
+    return "Unknown";
+}
+
 void dump(const Elf64_Ehdr& header) {
     {
         std::array<uint8_t, 4> values = {
@@ -103,6 +129,7 @@ void dump(const Elf64_Ehdr& header) {
     printf("ABI Version: %d\n", header.e_ident[EI_ABIVERSION]);
     printf("Pad Start: %d\n", header.e_ident[EI_PAD]);
     printf("e_ident Size: %d\n", header.e_ident[EI_NIDENT]);
+    printf("Type: %s (%d)\n", typeToString(header.e_type).cbegin(), header.e_type);
 }
 
 int main(int argc, char* argv[]) {
