@@ -119,7 +119,7 @@ std::string_view programTypeToString(uint32_t value) {
     case PT_NOTE:
         return "Note";
     case PT_PHDR:
-        return "Pprogram Header Table";
+        return "Program Header Table";
     case PT_TLS:
         return "Thread Local Storage";
     default:
