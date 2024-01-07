@@ -90,6 +90,8 @@
     "*.tcc": "cpp",
     "memory_resource": "cpp",
     "thread": "cpp",
-    "cinttypes": "cpp"
+    "cinttypes": "cpp",
+    "__functional_base_03": "cpp",
+    "filesystem": "cpp"
   }
 }

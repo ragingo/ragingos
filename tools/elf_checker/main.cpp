@@ -23,6 +23,8 @@ std::array<T, N> read(std::ifstream& fs) {
 }
 
 void dumpELFHeader(std::ifstream& fs) {
+    printf("===== ELF Header =====\n");
+
     auto ident_magic = read<uint8_t, 4>(fs);
     auto ident_magic_text = std::vector(ident_magic.begin(), ident_magic.end());
     ident_magic_text.emplace_back('\0');
@@ -53,7 +55,7 @@ void dumpELFHeader(std::ifstream& fs) {
     assert(fs.tellg() == EI_NIDENT);
 
     auto type = read<uint16_t>(fs);
-    printf("Type: %s (%d)\n", typeToString(type).cbegin(), type);
+    printf("Type: %s (%d)\n", elfTypeToString(type).cbegin(), type);
 
     auto machine = read<uint16_t>(fs);
     printf("Machine: %s (%d)\n", machineToString(machine).cbegin(), machine);
@@ -92,6 +94,13 @@ void dumpELFHeader(std::ifstream& fs) {
     printf("Section Header String Table Index: %u (0x%X)\n", sectionHeaderStringTableIndex, sectionHeaderStringTableIndex);
 }
 
+void dumpProgramHeader(std::ifstream& fs) {
+    printf("===== Program Header =====\n");
+
+    auto type = read<uint32_t>(fs);
+    printf("Type: %s (%d)\n", programTypeToString(type).cbegin(), type);
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         printf("ファイル名を指定してください。\n");
@@ -115,6 +124,7 @@ int main(int argc, char* argv[]) {
     }
 
     dumpELFHeader(stream);
+    dumpProgramHeader(stream);
 
     stream.close();
     return EXIT_SUCCESS;

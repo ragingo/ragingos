@@ -62,7 +62,7 @@ std::string_view osabiToString(uint8_t value) {
     }
 }
 
-std::string_view typeToString(uint16_t value) {
+std::string_view elfTypeToString(uint16_t value) {
     switch (value) {
     case ET_NONE:
         return "None";
@@ -101,6 +101,27 @@ std::string_view machineToString(uint16_t value) {
         return "AArch64";
     case EM_RISCV:
         return "RISC-V";
+    default:
+        return "Unknown";
+    }
+}
+
+std::string_view programTypeToString(uint32_t value) {
+    switch (value) {
+    case PT_NULL:
+        return "NULL";
+    case PT_LOAD:
+        return "Load";
+    case PT_DYNAMIC:
+        return "Dynamic Link";
+    case PT_INTERP:
+        return "Interpeter";
+    case PT_NOTE:
+        return "Note";
+    case PT_PHDR:
+        return "Pprogram Header Table";
+    case PT_TLS:
+        return "Thread Local Storage";
     default:
         return "Unknown";
     }
