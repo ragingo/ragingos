@@ -1,158 +1,139 @@
 #include <elf.h>
 #include <stdio.h>
-#include <algorithm>
 #include <array>
+#include <cassert>
 #include <fstream>
-#include <iostream>
 #include <string>
 #include <string_view>
 #include <vector>
+#include "enum2str.h"
 
-std::string_view classToString(uint8_t value) {
-    switch (value)
-    {
-    case ELFCLASSNONE:
-        return "NONE";
-    case ELFCLASS32:
-        return "ELF32";
-    case ELFCLASS64:
-        return "ELF64";
-    default:
-        return "Unknown";
-    }
+template<typename T>
+T read(std::ifstream& fs) {
+    T buf;
+    fs.read(reinterpret_cast<char*>(&buf), sizeof(T));
+    return buf;
 }
 
-std::string_view dataToString(uint8_t value) {
-    switch (value)
-    {
-    case ELFDATANONE:
-        return "NONE";
-    case ELFDATA2LSB:
-        return "Little Endian";
-    case ELFDATA2MSB:
-        return "Big Endian";
-    default:
-        return "";
-    }
+template<typename T, std::size_t N>
+std::array<T, N> read(std::ifstream& fs) {
+    std::array<T, N> buf = { 0 };
+    fs.read(reinterpret_cast<char*>(buf.data()), sizeof(T) * N);
+    return buf;
 }
 
-std::string_view osabiToString(uint8_t value) {
-    switch (value) {
-        case ELFOSABI_NONE:
-            return "Unspecified";
-        case ELFOSABI_HPUX:
-            return "Hewlett-Packard HP-UX";
-        case ELFOSABI_NETBSD:
-            return "NetBSD";
-        case ELFOSABI_LINUX:
-            return "Linux";
-        case ELFOSABI_SOLARIS:
-            return "Sun Solaris";
-        case ELFOSABI_AIX:
-            return "AIX";
-        case ELFOSABI_IRIX:
-            return "IRIX";
-        case ELFOSABI_FREEBSD:
-            return "FreeBSD";
-        case ELFOSABI_TRU64:
-            return "Compaq TRU64 UNIX";
-        case ELFOSABI_MODESTO:
-            return "Novell Modesto";
-        case ELFOSABI_OPENBSD:
-            return "Open BSD";
-        case ELFOSABI_ARM:
-            return "ARM";
-        case ELFOSABI_STANDALONE:
-            return "Standalone";
-        default:
-            return "Unknown";
+uint64_t calcEntryPointAddress(const Elf64_Ehdr& header) {
+    uint64_t entry = 0;
+    auto programHeader = reinterpret_cast<const Elf64_Phdr*>(reinterpret_cast<const uint8_t*>(&header) + header.e_phoff);
+
+    printf("[aaa] %d \n", header.e_phnum);
+    for (int i = 0; i < header.e_phnum; i++) {
+        auto ph = programHeader[i];
+        if (ph.p_type != PT_LOAD) {
+            printf("[aaa] not load \n");
+            continue;
+        }
+        printf("[aaa] entry %lX vs vaddr %lX \n", entry, ph.p_vaddr);
+        entry = std::min(entry, ph.p_vaddr);
     }
+
+    return entry;
 }
 
-std::string_view typeToString(uint16_t value) {
-    switch (value)
-    {
-    case ET_NONE:
-        return "None";
-    case ET_REL:
-        return "Relocatable";
-    case ET_EXEC:
-        return "Executable";
-    case ET_DYN:
-        return "Shared Object";
-    case ET_CORE:
-        return "Core";
-    }
+void dump(std::ifstream& fs) {
+    auto ident_magic = read<uint8_t, 4>(fs);
+    auto ident_magic_text = std::vector(ident_magic.begin(), ident_magic.end());
+    ident_magic_text.emplace_back('\0');
+    printf(
+        "Magic: %s (0x%X%X%X%X)\n",
+        reinterpret_cast<char*>(ident_magic_text.data()),
+        ident_magic[0], ident_magic[1], ident_magic[2], ident_magic[3]);
 
-    if (value >= ET_LOOS && value <= ET_HIOS) {
-        return "OS Specific";
-    }
+    auto ident_class = read<uint8_t>(fs);
+    printf("Class: %s (%d)\n", classToString(ident_class).cbegin(), ident_class);
 
-    if (value >= ET_LOPROC && value <= ET_HIPROC) {
-        return "Processor Specific";
-    }
+    auto ident_data = read<uint8_t>(fs);
+    printf("Data: %s (%d)\n", dataToString(ident_data).cbegin(), ident_data);
 
-    return "Unknown";
-}
+    auto ident_version = read<uint8_t>(fs);
+    std::string_view ident_version_text = ident_version == EV_CURRENT ? "Current" : "Unknown";
+    printf("Version: %s (%d)\n", ident_version_text.cbegin(), ident_version);
 
-void dump(const Elf64_Ehdr& header) {
-    {
-        std::array<uint8_t, 4> values = {
-            header.e_ident[EI_MAG0],
-            header.e_ident[EI_MAG1],
-            header.e_ident[EI_MAG2],
-            header.e_ident[EI_MAG3]
-        };
-        printf(
-            "Magic: %4s (0x%X%X%X%X)\n",
-            reinterpret_cast<char*>(values.data()),
-            values[0], values[1], values[2], values[3]
-        );
-    }
-    {
-        uint8_t value = header.e_ident[EI_CLASS];
-        printf("Class: %s (%d)\n", classToString(value).cbegin(), value);
-    }
-    {
-        uint8_t value = header.e_ident[EI_DATA];
-        printf("Data: %s (%d)\n", dataToString(value).cbegin(), value);
-    }
-    {
-        uint8_t value = header.e_ident[EI_VERSION];
-        std::string_view value_sv = value == EV_CURRENT ? "Current" : "Unknown";
-        printf("Version: %s (%d)\n", value_sv.cbegin(), value);
-    }
-    {
-        uint8_t value = header.e_ident[EI_OSABI];
-        printf("OS/ABI: %s (%d)\n", osabiToString(value).cbegin(), value);
-    }
-    printf("ABI Version: %d\n", header.e_ident[EI_ABIVERSION]);
-    printf("Pad Start: %d\n", header.e_ident[EI_PAD]);
-    printf("e_ident Size: %d\n", header.e_ident[EI_NIDENT]);
-    printf("Type: %s (%d)\n", typeToString(header.e_type).cbegin(), header.e_type);
+    auto ident_osabi = read<uint8_t>(fs);
+    printf("OS/ABI: %s (%d)\n", osabiToString(ident_osabi).cbegin(), ident_osabi);
+
+    auto ident_abiVersion = read<uint8_t>(fs);
+    printf("ABI Version: %d\n", ident_abiVersion);
+
+    read<uint8_t, 6>(fs);  // padding
+    read<uint8_t>(fs);     // e_ident size
+
+    assert(fs.tellg() == EI_NIDENT);
+
+    auto type = read<uint16_t>(fs);
+    printf("Type: %s (%d)\n", typeToString(type).cbegin(), type);
+
+    auto machine = read<uint16_t>(fs);
+    printf("Machine: %s (%d)\n", machineToString(machine).cbegin(), machine);
+
+    auto version = read<uint32_t>(fs);
+    printf("Version: %d\n", version);
+
+    auto entry = read<uint64_t>(fs);
+    printf("Entry Point Address (e_entry): 0x%lX\n", entry);
+
+    auto programHeaderOffset = read<uint64_t>(fs);
+    printf("Program Header Offset: %lu bytes (0x%lX)\n", programHeaderOffset, programHeaderOffset);
+
+    auto sectionHeaderOffset = read<uint64_t>(fs);
+    printf("Section Header Offset: %lu bytes (0x%lX)\n", sectionHeaderOffset, sectionHeaderOffset);
+
+    auto flags = read<uint32_t>(fs);
+    printf("Flags: 0x%X\n", flags);
+
+    auto elfHeaderSize = read<uint16_t>(fs);
+    printf("ELF Header Size: %u bytes (0x%X)\n", elfHeaderSize, elfHeaderSize);
+
+    auto programHeaderEntrySize = read<uint16_t>(fs);
+    printf("Program Header Entry Size: %u bytes (0x%X)\n", programHeaderEntrySize, programHeaderEntrySize);
+
+    auto programHeaderEntryCount = read<uint16_t>(fs);
+    printf("Program Header Entry Count: %u (0x%X)\n", programHeaderEntryCount, programHeaderEntryCount);
+
+    auto sectionHeaderEntrySize = read<uint16_t>(fs);
+    printf("Section Header Entry Size: %u bytes (0x%X)\n", sectionHeaderEntrySize, sectionHeaderEntrySize);
+
+    auto sectionHeaderEntryCount = read<uint16_t>(fs);
+    printf("Section Header Entry Count: %u (0x%X)\n", sectionHeaderEntryCount, sectionHeaderEntryCount);
+
+    auto sectionHeaderStringTableIndex = read<uint16_t>(fs);
+    printf("Section Header String Table Index: %u (0x%X)\n", sectionHeaderStringTableIndex, sectionHeaderStringTableIndex);
 }
 
 int main(int argc, char* argv[]) {
-    std::vector<std::string> args(argv, argv + argc);
-    auto file_name = args[0];
-    std::fstream stream { file_name, std::ios_base::in | std::ios_base::binary };
-
-    if (!stream.is_open()) {
-        printf("\"%s\" はオープンできなかった。\n", file_name.c_str());
+    if (argc < 2) {
+        printf("ファイル名を指定してください。\n");
         return EXIT_FAILURE;
     }
 
-    stream.seekg(0, std::ios_base::beg);
+    std::vector<std::string> args(argv, argv + argc);
+    assert(argc == args.size());
+    auto file_name = args[1];
+    printf("%s\n", file_name.c_str());
+    std::ifstream stream(file_name, std::ios::binary);
 
-    Elf64_Ehdr file_header = {0};
-    stream.read(reinterpret_cast<char*>(&file_header), sizeof(Elf64_Ehdr));
+    if (!stream.is_open()) {
+        printf("\"%s\" はオープンできませんでした。\n", file_name.c_str());
+        return EXIT_FAILURE;
+    }
 
     if (stream.fail()) {
         stream.close();
         return EXIT_FAILURE;
     }
 
+    dump(stream);
+
     stream.close();
-    dump(file_header);
     return EXIT_SUCCESS;
 }

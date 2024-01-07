@@ -1,0 +1,63 @@
+BasedOnStyle: 'Google'
+
+AccessModifierOffset: -4
+AllowShortIfStatementsOnASingleLine: false
+AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakTemplateDeclarations: true
+BreakBeforeBraces: 'Custom'
+BraceWrapping:
+    AfterClass: false
+    AfterControlStatement: false
+    AfterEnum: false
+    AfterFunction: false
+    AfterNamespace: false
+    AfterStruct: false
+    AfterUnion: false
+    AfterExternBlock: false
+    BeforeCatch: false
+    BeforeElse: false
+    IndentBraces: false
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: 'BeforeComma'
+BreakInheritanceList: 'BeforeComma'
+ColumnLimit: 0
+CompactNamespaces: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+Cpp11BracedListStyle: false
+FixNamespaceComments: true
+IncludeBlocks: 'Merge'
+IncludeCategories:
+  - Regex:           '^<.+'
+    Priority:        1
+  - Regex:           '^".+'
+    Priority:        2
+IndentCaseLabels: false
+IndentPPDirectives: 'AfterHash'
+IndentWidth: 4
+KeepEmptyLinesAtTheStartOfBlocks: true
+Language: 'Cpp'
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: 'All'
+PointerAlignment: 'Left'
+SortIncludes: false
+SortUsingDeclarations: true
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: 'ControlStatements'
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: true
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: 'Cpp11'
+TabWidth: 4
+UseTab: 'Never'
