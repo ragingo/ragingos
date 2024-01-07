@@ -22,25 +22,7 @@ std::array<T, N> read(std::ifstream& fs) {
     return buf;
 }
 
-uint64_t calcEntryPointAddress(const Elf64_Ehdr& header) {
-    uint64_t entry = 0;
-    auto programHeader = reinterpret_cast<const Elf64_Phdr*>(reinterpret_cast<const uint8_t*>(&header) + header.e_phoff);
-
-    printf("[aaa] %d \n", header.e_phnum);
-    for (int i = 0; i < header.e_phnum; i++) {
-        auto ph = programHeader[i];
-        if (ph.p_type != PT_LOAD) {
-            printf("[aaa] not load \n");
-            continue;
-        }
-        printf("[aaa] entry %lX vs vaddr %lX \n", entry, ph.p_vaddr);
-        entry = std::min(entry, ph.p_vaddr);
-    }
-
-    return entry;
-}
-
-void dump(std::ifstream& fs) {
+void dumpELFHeader(std::ifstream& fs) {
     auto ident_magic = read<uint8_t, 4>(fs);
     auto ident_magic_text = std::vector(ident_magic.begin(), ident_magic.end());
     ident_magic_text.emplace_back('\0');
@@ -132,7 +114,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    dump(stream);
+    dumpELFHeader(stream);
 
     stream.close();
     return EXIT_SUCCESS;
