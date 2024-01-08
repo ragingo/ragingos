@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <fstream>
+#include <functional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,6 +23,28 @@ std::array<T, N> read(std::ifstream& fs) {
     return buf;
 }
 
+template<typename T>
+using ValueToString = std::function<std::string_view(T)>;
+
+template<typename T>
+void print(std::string_view name, T value) {
+    if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t>) {
+        printf("%s: %d, 0x%X\n", name.data(), value, value);
+    } else if constexpr (std::is_same_v<T, uint64_t>) {
+        printf("%s: %ld, 0x%lX\n", name.data(), value, value);
+    }
+}
+
+template<typename T>
+void print(std::string_view name, T value, ValueToString<T> fn) {
+    auto text = fn ? fn(value) : "";
+    if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t>) {
+        printf("%s: %s (%d, 0x%X)\n", name.data(), text.cbegin(), value, value);
+    } else if constexpr (std::is_same_v<T, uint64_t>) {
+        printf("%s: %s (%ld, 0x%lX)\n", name.data(), text.cbegin(), value, value);
+    }
+}
+
 void dumpELFHeader(std::ifstream& fs) {
     printf("===== ELF Header =====\n");
 
@@ -34,20 +57,22 @@ void dumpELFHeader(std::ifstream& fs) {
         ident_magic[0], ident_magic[1], ident_magic[2], ident_magic[3]);
 
     auto ident_class = read<uint8_t>(fs);
-    printf("Class: %s (%d)\n", classToString(ident_class).cbegin(), ident_class);
+    print("Class", ident_class, ValueToString<uint8_t>(classToString));
 
     auto ident_data = read<uint8_t>(fs);
-    printf("Data: %s (%d)\n", dataToString(ident_data).cbegin(), ident_data);
+    print("Data", ident_data, ValueToString<uint8_t>(dataToString));
 
     auto ident_version = read<uint8_t>(fs);
-    std::string_view ident_version_text = ident_version == EV_CURRENT ? "Current" : "Unknown";
-    printf("Version: %s (%d)\n", ident_version_text.cbegin(), ident_version);
+    ValueToString<uint8_t> ident_version_toString = [](uint8_t v) -> std::string_view {
+        return v == EV_CURRENT ? "Current" : "Unknown";
+    };
+    print("Version", ident_version, ident_version_toString);
 
     auto ident_osabi = read<uint8_t>(fs);
-    printf("OS/ABI: %s (%d)\n", osabiToString(ident_osabi).cbegin(), ident_osabi);
+    print("OS/ABI", ident_osabi, ValueToString<uint8_t>(osabiToString));
 
     auto ident_abiVersion = read<uint8_t>(fs);
-    printf("ABI Version: %d\n", ident_abiVersion);
+    print("ABI Version", ident_abiVersion);
 
     read<uint8_t, 6>(fs);  // padding
     read<uint8_t>(fs);     // e_ident size
@@ -55,50 +80,50 @@ void dumpELFHeader(std::ifstream& fs) {
     assert(fs.tellg() == EI_NIDENT);
 
     auto type = read<uint16_t>(fs);
-    printf("Type: %s (%d)\n", elfTypeToString(type).cbegin(), type);
+    print("Type", type, ValueToString<uint16_t>(elfTypeToString));
 
     auto machine = read<uint16_t>(fs);
-    printf("Machine: %s (%d)\n", machineToString(machine).cbegin(), machine);
+    print("Machine", machine, ValueToString<uint16_t>(machineToString));
 
     auto version = read<uint32_t>(fs);
-    printf("Version: %d\n", version);
+    print("Version", version);
 
     auto entry = read<uint64_t>(fs);
-    printf("Entry Point Address (e_entry): 0x%lX\n", entry);
+    print("Entry Point Address (e_entry)", entry);
 
     auto programHeaderOffset = read<uint64_t>(fs);
-    printf("Program Header Offset: %lu bytes (0x%lX)\n", programHeaderOffset, programHeaderOffset);
+    print("Program Header Offset", programHeaderOffset);
 
     auto sectionHeaderOffset = read<uint64_t>(fs);
-    printf("Section Header Offset: %lu bytes (0x%lX)\n", sectionHeaderOffset, sectionHeaderOffset);
+    print("Section Header Offset", sectionHeaderOffset);
 
     auto flags = read<uint32_t>(fs);
-    printf("Flags: 0x%X\n", flags);
+    print("Flags", flags);
 
     auto elfHeaderSize = read<uint16_t>(fs);
-    printf("ELF Header Size: %u bytes (0x%X)\n", elfHeaderSize, elfHeaderSize);
+    print("ELF Header Size", elfHeaderSize);
 
     auto programHeaderEntrySize = read<uint16_t>(fs);
-    printf("Program Header Entry Size: %u bytes (0x%X)\n", programHeaderEntrySize, programHeaderEntrySize);
+    print("Program Header Entry Size", programHeaderEntrySize);
 
     auto programHeaderEntryCount = read<uint16_t>(fs);
-    printf("Program Header Entry Count: %u (0x%X)\n", programHeaderEntryCount, programHeaderEntryCount);
+    print("Program Header Entry Count", programHeaderEntryCount);
 
     auto sectionHeaderEntrySize = read<uint16_t>(fs);
-    printf("Section Header Entry Size: %u bytes (0x%X)\n", sectionHeaderEntrySize, sectionHeaderEntrySize);
+    print("Section Header Entry Size", sectionHeaderEntrySize);
 
     auto sectionHeaderEntryCount = read<uint16_t>(fs);
-    printf("Section Header Entry Count: %u (0x%X)\n", sectionHeaderEntryCount, sectionHeaderEntryCount);
+    print("Section Header Entry Count", sectionHeaderEntryCount);
 
     auto sectionHeaderStringTableIndex = read<uint16_t>(fs);
-    printf("Section Header String Table Index: %u (0x%X)\n", sectionHeaderStringTableIndex, sectionHeaderStringTableIndex);
+    print("Section Header String Table Index", sectionHeaderStringTableIndex);
 }
 
 void dumpProgramHeader(std::ifstream& fs) {
     printf("===== Program Header =====\n");
 
     auto type = read<uint32_t>(fs);
-    printf("Type: %s (%d)\n", programTypeToString(type).cbegin(), type);
+    print("Type", type, ValueToString<uint32_t>(programTypeToString));
 }
 
 int main(int argc, char* argv[]) {
