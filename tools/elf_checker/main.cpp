@@ -45,7 +45,7 @@ void print(std::string_view name, T value, ValueToString<T> fn) {
     }
 }
 
-void dumpELFHeader(std::ifstream& fs) {
+void dumpHeader(std::ifstream& fs) {
     printf("===== ELF Header =====\n");
 
     auto ident_magic = read<uint8_t, 4>(fs);
@@ -117,13 +117,21 @@ void dumpELFHeader(std::ifstream& fs) {
 
     auto sectionHeaderStringTableIndex = read<uint16_t>(fs);
     print("Section Header String Table Index", sectionHeaderStringTableIndex);
-}
 
-void dumpProgramHeader(std::ifstream& fs) {
+    assert(fs.tellg() == programHeaderOffset);
+
+    printf("\n");
     printf("===== Program Header =====\n");
 
-    auto type = read<uint32_t>(fs);
-    print("Type", type, ValueToString<uint32_t>(programTypeToString));
+    for (int i = 0; i < programHeaderEntryCount; i++) {
+        printf("- - - Entry %d - - -\n", i);
+        auto programHeaderType = read<uint32_t>(fs);
+        print("Progream Header Type", programHeaderType, ValueToString<uint32_t>(programTypeToString));
+
+        fs.seekg(programHeaderEntrySize - sizeof(uint32_t), std::ios::cur);
+    }
+
+    assert(fs.tellg() == programHeaderOffset + programHeaderEntrySize * programHeaderEntryCount);
 }
 
 int main(int argc, char* argv[]) {
@@ -148,8 +156,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    dumpELFHeader(stream);
-    dumpProgramHeader(stream);
+    dumpHeader(stream);
 
     stream.close();
     return EXIT_SUCCESS;

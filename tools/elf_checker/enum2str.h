@@ -122,6 +122,8 @@ std::string_view programTypeToString(uint32_t value) {
         return "Program Header Table";
     case PT_TLS:
         return "Thread Local Storage";
+    case PT_GNU_STACK:
+        return "GNU Stack";
     default:
         return "Unknown";
     }
