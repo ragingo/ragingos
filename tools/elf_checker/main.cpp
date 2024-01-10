@@ -48,31 +48,31 @@ void print(std::string_view name, T value, ValueToString<T> fn) {
 void dumpHeader(std::ifstream& fs) {
     printf("===== ELF Header =====\n");
 
-    auto ident_magic = read<uint8_t, 4>(fs);
-    auto ident_magic_text = std::vector(ident_magic.begin(), ident_magic.end());
-    ident_magic_text.emplace_back('\0');
+    auto identMagic = read<uint8_t, 4>(fs);
+    auto identMagicText = std::vector(identMagic.begin(), identMagic.end());
+    identMagicText.emplace_back('\0');
     printf(
         "Magic: %s (0x%X%X%X%X)\n",
-        reinterpret_cast<char*>(ident_magic_text.data()),
-        ident_magic[0], ident_magic[1], ident_magic[2], ident_magic[3]);
+        reinterpret_cast<char*>(identMagicText.data()),
+        identMagic[0], identMagic[1], identMagic[2], identMagic[3]);
 
-    auto ident_class = read<uint8_t>(fs);
-    print("Class", ident_class, ValueToString<uint8_t>(classToString));
+    auto identClass = read<uint8_t>(fs);
+    print("Class", identClass, ValueToString<uint8_t>(classToString));
 
     auto ident_data = read<uint8_t>(fs);
     print("Data", ident_data, ValueToString<uint8_t>(dataToString));
 
-    auto ident_version = read<uint8_t>(fs);
-    ValueToString<uint8_t> ident_version_toString = [](uint8_t v) -> std::string_view {
+    auto identVersion = read<uint8_t>(fs);
+    ValueToString<uint8_t> identVersionToString = [](uint8_t v) -> std::string_view {
         return v == EV_CURRENT ? "Current" : "Unknown";
     };
-    print("Version", ident_version, ident_version_toString);
+    print("Version", identVersion, identVersionToString);
 
-    auto ident_osabi = read<uint8_t>(fs);
-    print("OS/ABI", ident_osabi, ValueToString<uint8_t>(osabiToString));
+    auto identOSABI = read<uint8_t>(fs);
+    print("OS/ABI", identOSABI, ValueToString<uint8_t>(osabiToString));
 
-    auto ident_abiVersion = read<uint8_t>(fs);
-    print("ABI Version", ident_abiVersion);
+    auto identABIVersion = read<uint8_t>(fs);
+    print("ABI Version", identABIVersion);
 
     read<uint8_t, 6>(fs);  // padding
     read<uint8_t>(fs);     // e_ident size
@@ -123,8 +123,11 @@ void dumpHeader(std::ifstream& fs) {
     printf("\n");
     printf("===== Program Header =====\n");
 
+    // MEMO: PT_LOAD は必ず連続して配置されている
+    uint64_t loadAddressRangeStart = UINT64_MAX;
+    uint64_t loadAddressRangeEnd = 0;
     for (int i = 0; i < programHeaderEntryCount; i++) {
-        printf("- - - Entry %d - - -\n", i);
+        printf("- - - Segment %d - - -\n", i);
 
         auto type = read<uint32_t>(fs);
         print("Type", type, ValueToString<uint32_t>(programTypeToString));
@@ -150,10 +153,19 @@ void dumpHeader(std::ifstream& fs) {
         auto alignment = read<uint64_t>(fs);
         print("Alignment", alignment);
 
-        if (type == PT_LOAD && fileSize > memorySize) {
-            printf("壊れています。理由: PT_LOAD && p_filesz > p_memsz\n");
+        if (type == PT_LOAD) {
+            if (fileSize > memorySize) {
+                printf("壊れています。理由: PT_LOAD && p_filesz > p_memsz\n");
+                continue;
+            }
+            loadAddressRangeStart = std::min(loadAddressRangeStart, virtualAddress);
+            loadAddressRangeEnd = std::max(loadAddressRangeEnd, virtualAddress + memorySize);
         }
     }
+
+    printf("- - -\n");
+    print("Load Address Range Start", loadAddressRangeStart);
+    print("Load Address Range End", loadAddressRangeEnd);
 
     assert(fs.tellg() == programHeaderOffset + programHeaderEntrySize * programHeaderEntryCount);
 }
@@ -166,12 +178,12 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::string> args(argv, argv + argc);
     assert(argc == args.size());
-    auto file_name = args[1];
-    printf("%s\n", file_name.c_str());
-    std::ifstream stream(file_name, std::ios::binary);
+    auto fileName = args[1];
+    printf("%s\n", fileName.c_str());
+    std::ifstream stream(fileName, std::ios::binary);
 
     if (!stream.is_open()) {
-        printf("\"%s\" はオープンできませんでした。\n", file_name.c_str());
+        printf("\"%s\" はオープンできませんでした。\n", fileName.c_str());
         return EXIT_FAILURE;
     }
 
