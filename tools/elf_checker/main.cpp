@@ -125,10 +125,34 @@ void dumpHeader(std::ifstream& fs) {
 
     for (int i = 0; i < programHeaderEntryCount; i++) {
         printf("- - - Entry %d - - -\n", i);
-        auto programHeaderType = read<uint32_t>(fs);
-        print("Progream Header Type", programHeaderType, ValueToString<uint32_t>(programTypeToString));
 
-        fs.seekg(programHeaderEntrySize - sizeof(uint32_t), std::ios::cur);
+        auto type = read<uint32_t>(fs);
+        print("Type", type, ValueToString<uint32_t>(programTypeToString));
+
+        auto flags = read<uint32_t>(fs);
+        print("Flags", flags);
+
+        auto offset = read<uint64_t>(fs);
+        print("Offset", offset);
+
+        auto virtualAddress = read<uint64_t>(fs);
+        print("Virtual Address", virtualAddress);
+
+        auto physicalAddress = read<uint64_t>(fs);
+        print("Pysical Address", physicalAddress);
+
+        auto fileSize = read<uint64_t>(fs);
+        print("File Size", fileSize);
+
+        auto memorySize = read<uint64_t>(fs);
+        print("Memory Size", memorySize);
+
+        auto alignment = read<uint64_t>(fs);
+        print("Alignment", alignment);
+
+        if (type == PT_LOAD && fileSize > memorySize) {
+            printf("壊れています。理由: PT_LOAD && p_filesz > p_memsz\n");
+        }
     }
 
     assert(fs.tellg() == programHeaderOffset + programHeaderEntrySize * programHeaderEntryCount);
