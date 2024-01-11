@@ -1,6 +1,14 @@
 SHELL=/bin/bash
 
+.PHONY: all
 all: build_edk2 build_kernel make_disk run_disk
+
+.PHONY: clean
+clean: clean_kernel
+	-rm ./build/*
+
+clean_kernel:
+	-rm -rf ./build/kernel
 
 build_edk2:
 	./scripts/build_edk2.sh

@@ -1,9 +1,10 @@
+#　hankaku.o がディレクトリパスの影響を受ける・・・（シンボル名にディレクトリパスが入る）
 TARGET_DIR = ../../build/kernel
-TARGET = $(TARGET_DIR)/kernel.elf
+TARGET = ../../build/kernel/kernel.elf
 SRCDIR = .
 
-OBJS = $(patsubst $(SRCDIR)/%.cpp,$(TARGET_DIR)/%.o,$(wildcard $(SRCDIR)/*.cpp))
-DEPENDS = $(patsubst $(SRCDIR)/%.cpp,$(TARGET_DIR)/.%.d,$(wildcard $(SRCDIR)/*.cpp))
+OBJS = $(TARGET_DIR)/main.o $(TARGET_DIR)/graphics.o $(TARGET_DIR)/font.o $(TARGET_DIR)/hankaku.o
+DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
 
 CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone \
             -fno-exceptions -fno-rtti -std=c++17
@@ -22,6 +23,19 @@ $(TARGET_DIR)/.%.d: $(SRCDIR)/%.cpp
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@
 	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRCDIR)/%.cpp,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
+
+HANKAKU_BIN = $(TARGET_DIR)/hankaku.bin
+HANKAKU_O = $(TARGET_DIR)/hankaku.o
+
+$(HANKAKU_BIN): $(SRCDIR)/hankaku.txt
+	../../tools/makefont.py -o $(HANKAKU_BIN) $(SRCDIR)/hankaku.txt
+
+$(HANKAKU_O): $(HANKAKU_BIN)
+	# --redefine-sym _binary_______build_kernel_hankaku_bin_start=_binary_hankaku_bin_start をやっても書き換わらない
+	objcopy -I binary -O elf64-x86-64 -B i386:x86-64 $(HANKAKU_BIN) $(HANKAKU_O)
+
+$(TARGET_DIR)/.%.d: $(TARGET_DIR)/%.bin
+	touch $@
 
 .PHONY: depends
 depends:
