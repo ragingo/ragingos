@@ -3,9 +3,15 @@ TARGET_DIR = ../../build/kernel
 TARGET = ../../build/kernel/kernel.elf
 SRCDIR = .
 
-OBJS = $(TARGET_DIR)/main.o $(TARGET_DIR)/graphics.o $(TARGET_DIR)/font.o $(TARGET_DIR)/hankaku.o
+OBJS = \
+	$(TARGET_DIR)/main.o \
+	$(TARGET_DIR)/graphics.o \
+	$(TARGET_DIR)/font.o \
+	$(TARGET_DIR)/hankaku.o \
+	$(TARGET_DIR)/newlib_support.o
 DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
 
+CFLAGS   += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone
 CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone \
             -fno-exceptions -fno-rtti -std=c++17
 LDFLAGS  += --entry KernelMain -z norelro --image-base 0x100000 --static
@@ -14,7 +20,7 @@ LDFLAGS  += --entry KernelMain -z norelro --image-base 0x100000 --static
 all: $(TARGET)
 
 $(TARGET): $(OBJS) Makefile
-	ld.lld $(LDFLAGS) -o $@ $(OBJS)
+	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc
 
 $(TARGET_DIR)/%.o: $(SRCDIR)/%.cpp Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
@@ -22,6 +28,14 @@ $(TARGET_DIR)/%.o: $(SRCDIR)/%.cpp Makefile
 $(TARGET_DIR)/.%.d: $(SRCDIR)/%.cpp
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@
 	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRCDIR)/%.cpp,%.o,$<))
+	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
+
+$(TARGET_DIR)/%.o: $(SRCDIR)/%.c Makefile
+	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(TARGET_DIR)/.%.d: $(SRCDIR)/%.c
+	clang $(CPPFLAGS) $(CFLAGS) -MM $< > $@
+	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRCDIR)/%.c,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 
 HANKAKU_BIN = $(TARGET_DIR)/hankaku.bin
