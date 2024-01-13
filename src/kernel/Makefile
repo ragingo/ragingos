@@ -7,6 +7,7 @@ OBJS = \
 	$(TARGET_DIR)/main.o \
 	$(TARGET_DIR)/graphics.o \
 	$(TARGET_DIR)/font.o \
+	$(TARGET_DIR)/console.o \
 	$(TARGET_DIR)/hankaku.o \
 	$(TARGET_DIR)/newlib_support.o
 DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
