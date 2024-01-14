@@ -8,6 +8,8 @@ OBJS = \
 	$(TARGET_DIR)/graphics.o \
 	$(TARGET_DIR)/font.o \
 	$(TARGET_DIR)/console.o \
+	$(TARGET_DIR)/pci.o \
+	$(TARGET_DIR)/asmfunc.o \
 	$(TARGET_DIR)/hankaku.o \
 	$(TARGET_DIR)/newlib_support.o
 DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
@@ -38,6 +40,9 @@ $(TARGET_DIR)/.%.d: $(SRCDIR)/%.c
 	clang $(CPPFLAGS) $(CFLAGS) -MM $< > $@
 	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRCDIR)/%.c,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
+
+$(TARGET_DIR)/%.o: $(SRCDIR)/%.asm Makefile
+	nasm -f elf64 -o $@ $<
 
 HANKAKU_BIN = $(TARGET_DIR)/hankaku.bin
 HANKAKU_O = $(TARGET_DIR)/hankaku.o
