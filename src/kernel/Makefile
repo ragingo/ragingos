@@ -6,24 +6,45 @@ SRCDIR = .
 OBJS = \
 	$(TARGET_DIR)/main.o \
 	$(TARGET_DIR)/graphics.o \
+	$(TARGET_DIR)/mouse.o \
 	$(TARGET_DIR)/font.o \
+	$(TARGET_DIR)/hankaku.o \
+	$(TARGET_DIR)/newlib_support.o \
 	$(TARGET_DIR)/console.o \
 	$(TARGET_DIR)/pci.o \
 	$(TARGET_DIR)/asmfunc.o \
-	$(TARGET_DIR)/hankaku.o \
-	$(TARGET_DIR)/newlib_support.o
+	$(TARGET_DIR)/libcxx_support.o \
+	$(TARGET_DIR)/logger.o \
+	$(TARGET_DIR)/usb/memory.o \
+	$(TARGET_DIR)/usb/device.o \
+	$(TARGET_DIR)/usb/xhci/ring.o \
+	$(TARGET_DIR)/usb/xhci/trb.o \
+	$(TARGET_DIR)/usb/xhci/xhci.o \
+	$(TARGET_DIR)/usb/xhci/port.o \
+	$(TARGET_DIR)/usb/xhci/device.o \
+	$(TARGET_DIR)/usb/xhci/devmgr.o \
+	$(TARGET_DIR)/usb/xhci/registers.o \
+	$(TARGET_DIR)/usb/classdriver/base.o \
+	$(TARGET_DIR)/usb/classdriver/hid.o \
+	$(TARGET_DIR)/usb/classdriver/keyboard.o \
+	$(TARGET_DIR)/usb/classdriver/mouse.o
 DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
 
+CPPFLAGS += -I.
 CFLAGS   += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone
 CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone \
             -fno-exceptions -fno-rtti -std=c++17
 LDFLAGS  += --entry KernelMain -z norelro --image-base 0x100000 --static
 
 .PHONY: all
-all: $(TARGET)
+all: setup $(TARGET)
+
+setup:
+	mkdir -p $(TARGET_DIR)/usb/xhci
+	mkdir -p $(TARGET_DIR)/usb/classdriver
 
 $(TARGET): $(OBJS) Makefile
-	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc
+	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++
 
 $(TARGET_DIR)/%.o: $(SRCDIR)/%.cpp Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
