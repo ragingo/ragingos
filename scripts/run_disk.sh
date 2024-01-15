@@ -19,4 +19,7 @@ qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly=on,file=$OUTPUT_PATH/OVMF_CODE.fd \
   -drive if=pflash,format=raw,file=$OUTPUT_PATH/OVMF_VARS.fd \
   -drive if=ide,index=0,media=disk,format=raw,file=$OUTPUT_PATH/disk.img \
+  -device nec-usb-xhci,id=xhci \
+  -device usb-mouse \
+  -device usb-kbd \
   -monitor stdio
