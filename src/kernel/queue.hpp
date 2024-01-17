@@ -5,7 +5,6 @@
 
 #include "error.hpp"
 
-// #@@range_begin(class)
 template<typename T>
 class ArrayQueue {
 public:
@@ -28,9 +27,7 @@ private:
    */
     const size_t capacity_;
 };
-// #@@range_end(class)
 
-// #@@range_begin(constructor)
 template<typename T>
 template<size_t N>
 ArrayQueue<T>::ArrayQueue(std::array<T, N>& buf)
@@ -43,9 +40,7 @@ ArrayQueue<T>::ArrayQueue(T* buf, size_t size)
     , write_pos_ { 0 }
     , count_ { 0 }
     , capacity_ { size } {}
-// #@@range_end(constructor)
 
-// #@@range_begin(push)
 template<typename T>
 Error ArrayQueue<T>::Push(const T& value) {
     if (count_ == capacity_) {
@@ -60,9 +55,7 @@ Error ArrayQueue<T>::Push(const T& value) {
     }
     return MAKE_ERROR(Error::kSuccess);
 }
-// #@@range_end(push)
 
-// #@@range_begin(pop)
 template<typename T>
 Error ArrayQueue<T>::Pop() {
     if (count_ == 0) {
@@ -76,7 +69,6 @@ Error ArrayQueue<T>::Pop() {
     }
     return MAKE_ERROR(Error::kSuccess);
 }
-// #@@range_end(pop)
 
 template<typename T>
 size_t ArrayQueue<T>::Count() const {
@@ -88,9 +80,7 @@ size_t ArrayQueue<T>::Capacity() const {
     return capacity_;
 }
 
-// #@@range_begin(front)
 template<typename T>
 const T& ArrayQueue<T>::Front() const {
     return data_[read_pos_];
 }
-// #@@range_end(front)
