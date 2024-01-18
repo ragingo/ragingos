@@ -16,6 +16,8 @@ OBJS = \
 	$(TARGET_DIR)/libcxx_support.o \
 	$(TARGET_DIR)/logger.o \
 	$(TARGET_DIR)/interrupt.o \
+	$(TARGET_DIR)/segment.o \
+	$(TARGET_DIR)/paging.o \
 	$(TARGET_DIR)/usb/memory.o \
 	$(TARGET_DIR)/usb/device.o \
 	$(TARGET_DIR)/usb/xhci/ring.o \
