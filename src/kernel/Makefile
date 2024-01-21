@@ -18,6 +18,7 @@ OBJS = \
 	$(TARGET_DIR)/interrupt.o \
 	$(TARGET_DIR)/segment.o \
 	$(TARGET_DIR)/paging.o \
+	$(TARGET_DIR)/memory_manager.o \
 	$(TARGET_DIR)/usb/memory.o \
 	$(TARGET_DIR)/usb/device.o \
 	$(TARGET_DIR)/usb/xhci/ring.o \
