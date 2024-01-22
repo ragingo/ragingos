@@ -1,38 +1,15 @@
 #　hankaku.o がディレクトリパスの影響を受ける・・・（シンボル名にディレクトリパスが入る）
 TARGET_DIR = ../../build/kernel
 TARGET = ../../build/kernel/kernel.elf
-SRCDIR = .
+SRC_DIR = .
+SRC_FILES := $(shell find $(SRC_DIR) -name '*.c' -or -name '*.cpp' -or -name '*.asm')
 
-OBJS = \
-	$(TARGET_DIR)/main.o \
-	$(TARGET_DIR)/graphics.o \
-	$(TARGET_DIR)/mouse.o \
-	$(TARGET_DIR)/font.o \
-	$(TARGET_DIR)/hankaku.o \
-	$(TARGET_DIR)/newlib_support.o \
-	$(TARGET_DIR)/console.o \
-	$(TARGET_DIR)/pci.o \
-	$(TARGET_DIR)/asmfunc.o \
-	$(TARGET_DIR)/libcxx_support.o \
-	$(TARGET_DIR)/logger.o \
-	$(TARGET_DIR)/interrupt.o \
-	$(TARGET_DIR)/segment.o \
-	$(TARGET_DIR)/paging.o \
-	$(TARGET_DIR)/memory_manager.o \
-	$(TARGET_DIR)/usb/memory.o \
-	$(TARGET_DIR)/usb/device.o \
-	$(TARGET_DIR)/usb/xhci/ring.o \
-	$(TARGET_DIR)/usb/xhci/trb.o \
-	$(TARGET_DIR)/usb/xhci/xhci.o \
-	$(TARGET_DIR)/usb/xhci/port.o \
-	$(TARGET_DIR)/usb/xhci/device.o \
-	$(TARGET_DIR)/usb/xhci/devmgr.o \
-	$(TARGET_DIR)/usb/xhci/registers.o \
-	$(TARGET_DIR)/usb/classdriver/base.o \
-	$(TARGET_DIR)/usb/classdriver/hid.o \
-	$(TARGET_DIR)/usb/classdriver/keyboard.o \
-	$(TARGET_DIR)/usb/classdriver/mouse.o
-DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
+OBJS := $(patsubst $(SRC_DIR)/%.c,  $(TARGET_DIR)/%.o,$(filter %.c,  $(SRC_FILES))) \
+        $(patsubst $(SRC_DIR)/%.cpp,$(TARGET_DIR)/%.o,$(filter %.cpp,$(SRC_FILES))) \
+        $(patsubst $(SRC_DIR)/%.asm,$(TARGET_DIR)/%.o,$(filter %.asm,$(SRC_FILES)))
+OBJS += $(TARGET_DIR)/hankaku.o
+
+DEPENDS = $(OBJS:.o=.d)
 
 CPPFLAGS += -I.
 CFLAGS   += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone
@@ -50,30 +27,30 @@ setup:
 $(TARGET): $(OBJS) Makefile
 	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++
 
-$(TARGET_DIR)/%.o: $(SRCDIR)/%.cpp Makefile
+$(TARGET_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-$(TARGET_DIR)/.%.d: $(SRCDIR)/%.cpp
+$(TARGET_DIR)/.%.d: $(SRC_DIR)/%.cpp
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@
-	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRCDIR)/%.cpp,%.o,$<))
+	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRC_DIR)/%.cpp,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 
-$(TARGET_DIR)/%.o: $(SRCDIR)/%.c Makefile
+$(TARGET_DIR)/%.o: $(SRC_DIR)/%.c Makefile
 	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(TARGET_DIR)/.%.d: $(SRCDIR)/%.c
+$(TARGET_DIR)/.%.d: $(SRC_DIR)/%.c
 	clang $(CPPFLAGS) $(CFLAGS) -MM $< > $@
-	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRCDIR)/%.c,%.o,$<))
+	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRC_DIR)/%.c,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 
-$(TARGET_DIR)/%.o: $(SRCDIR)/%.asm Makefile
+$(TARGET_DIR)/%.o: $(SRC_DIR)/%.asm Makefile
 	nasm -f elf64 -o $@ $<
 
 HANKAKU_BIN = $(TARGET_DIR)/hankaku.bin
 HANKAKU_O = $(TARGET_DIR)/hankaku.o
 
-$(HANKAKU_BIN): $(SRCDIR)/hankaku.txt
-	../../tools/makefont.py -o $(HANKAKU_BIN) $(SRCDIR)/hankaku.txt
+$(HANKAKU_BIN): $(SRC_DIR)/hankaku.txt
+	../../tools/makefont.py -o $(HANKAKU_BIN) $(SRC_DIR)/hankaku.txt
 
 $(HANKAKU_O): $(HANKAKU_BIN)
 	# --redefine-sym _binary_______build_kernel_hankaku_bin_start=_binary_hankaku_bin_start をやっても書き換わらない
