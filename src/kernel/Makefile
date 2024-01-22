@@ -25,7 +25,7 @@ setup:
 	mkdir -p $(TARGET_DIR)/usb/classdriver
 
 $(TARGET): $(OBJS) Makefile
-	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++
+	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi
 
 $(TARGET_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
