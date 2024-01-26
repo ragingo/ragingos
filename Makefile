@@ -21,3 +21,6 @@ run_disk:
 
 build_kernel:
 	./scripts/build_kernel.sh
+
+format_code:
+	./scripts/formatter.sh
