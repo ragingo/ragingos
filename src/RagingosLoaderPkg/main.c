@@ -366,13 +366,14 @@ EFI_STATUS EFIAPI UefiMain(
         Halt();
     }
 
-        typedef void EntryPointType(const struct FrameBufferConfig*,
+    typedef void EntryPointType(const struct FrameBufferConfig*,
                                 const struct MemoryMap*);
     EntryPointType* entry_point = (EntryPointType*)entry_addr;
     entry_point(&config, &memmap);
 
     Print(L"All done\n");
 
-    while (1);
+    while (1)
+        ;
     return EFI_SUCCESS;
 }

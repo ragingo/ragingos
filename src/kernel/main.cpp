@@ -342,5 +342,6 @@ extern "C" void KernelMainNewStack(
 }
 
 extern "C" void __cxa_pure_virtual() {
-    while (1) __asm__("hlt");
+    while (1)
+        __asm__("hlt");
 }
