@@ -42,3 +42,9 @@ void SetDataSegment(SegmentDescriptor& desc,
                     uint32_t limit);
 
 void SetupSegments();
+const uint16_t kKernelCS = 1 << 3;
+const uint16_t kKernelSS = 2 << 3;
+const uint16_t kKernelDS = 0;
+
+void SetupSegments();
+void InitializeSegmentation();
