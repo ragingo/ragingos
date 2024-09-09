@@ -4,7 +4,7 @@ SHELL=/bin/bash
 all: build_edk2 build_kernel build_apps make_os_disk make_data_disk run_os_disk
 
 .PHONY: clean
-clean: clean_kernel
+clean: clean_kernel clean_apps
 	-rm ./build/*
 
 .PHONY: clean_kernel

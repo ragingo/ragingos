@@ -11,7 +11,7 @@ LDFLAGS += --entry main -z norelro --image-base 0 --static
 all: $(TARGET)
 
 $(TARGET): $(TARGET).o Makefile
-	ld.lld $(LDFLAGS) -o $(TARGET) $(TARGET).o
+	ld.lld $(LDFLAGS) -o $(TARGET) $(TARGET).o -lc -lc++ -lc++abi
 
 $(TARGET_DIR)/%.o: %.cpp Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
