@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 .PHONY: all
-all: build_edk2 build_kernel make_os_disk make_data_disk run_os_disk
+all: build_edk2 build_kernel build_apps make_os_disk make_data_disk run_os_disk
 
 .PHONY: clean
 clean: clean_kernel
@@ -10,6 +10,10 @@ clean: clean_kernel
 .PHONY: clean_kernel
 clean_kernel:
 	-rm -rf ./build/kernel
+
+.PHONY: clean_apps
+clean_apps:
+	-rm -rf ./build/apps
 
 .PHONY: rebuild
 rebuild: clean all
@@ -29,6 +33,10 @@ run_os_disk:
 .PHONY: build_kernel
 build_kernel:
 	./scripts/build_kernel.sh
+
+.PHONY: build_apps
+build_apps:
+	./scripts/build_apps.sh
 
 .PHONY: make_data_disk
 make_data_disk:
