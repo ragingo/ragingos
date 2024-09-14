@@ -70,11 +70,11 @@ public:
     void MarkAllocated(FrameID start_frame, size_t num_frames);
 
     /** @brief このメモリマネージャで扱うメモリ範囲を設定する．
-   * この呼び出し以降，Allocate によるメモリ割り当ては設定された範囲内でのみ行われる．
-   *
-   * @param range_begin_ メモリ範囲の始点
-   * @param range_end_   メモリ範囲の終点．最終フレームの次のフレーム．
-   */
+     * この呼び出し以降，Allocate によるメモリ割り当ては設定された範囲内でのみ行われる．
+     *
+     * @param range_begin_ メモリ範囲の始点
+     * @param range_end_   メモリ範囲の終点．最終フレームの次のフレーム．
+     */
     void SetMemoryRange(FrameID range_begin, FrameID range_end);
 
 private:
@@ -88,4 +88,5 @@ private:
     void SetBit(FrameID frame, bool allocated);
 };
 
+extern BitmapMemoryManager* memory_manager;
 void InitializeMemoryManager(const MemoryMap& memory_map);
