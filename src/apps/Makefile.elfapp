@@ -4,12 +4,20 @@ CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mcmodel=large \
             -fno-exceptions -fno-rtti -std=c++17
 LDFLAGS += --entry main -z norelro --image-base 0xffff800000000000 --static
 
-SRC_DIR = .
+SRC_DIR := .
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.c' -or -name '*.cpp' -or -name '*.asm')
 
-OBJS := $(patsubst $(SRC_DIR)/%.c,  $(TARGET_DIR)/%.o,$(filter %.c,  $(SRC_FILES))) \
+OBJS += $(patsubst $(SRC_DIR)/%.c,  $(TARGET_DIR)/%.o,$(filter %.c,  $(SRC_FILES))) \
         $(patsubst $(SRC_DIR)/%.cpp,$(TARGET_DIR)/%.o,$(filter %.cpp,$(SRC_FILES))) \
         $(patsubst $(SRC_DIR)/%.asm,$(TARGET_DIR)/%.o,$(filter %.asm,$(SRC_FILES)))
+
+# common (src/apps)
+SRC_COMMON_DIR := ..
+SRC_COMMON_FILES := $(shell find $(SRC_COMMON_DIR) -maxdepth 1 -name '*.c' -or -name '*.cpp' -or -name '*.asm')
+
+OBJS += $(patsubst $(SRC_COMMON_DIR)/%.c,  $(TARGET_DIR)/%.o,$(filter %.c,  $(SRC_COMMON_FILES))) \
+        $(patsubst $(SRC_COMMON_DIR)/%.cpp,$(TARGET_DIR)/%.o,$(filter %.cpp,$(SRC_COMMON_FILES))) \
+        $(patsubst $(SRC_COMMON_DIR)/%.asm,$(TARGET_DIR)/%.o,$(filter %.asm,$(SRC_COMMON_FILES)))
 
 .PHONY: all
 all: setup $(TARGET)
@@ -29,3 +37,14 @@ $(TARGET_DIR)/%.o: %.cpp Makefile
 
 $(TARGET_DIR)/%.o: %.asm Makefile
 	nasm -f elf64 -o $@ $<
+
+# common
+
+$(TARGET_DIR)/%.o: $(SRC_COMMON_DIR)/%.c Makefile
+	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(TARGET_DIR)/%.o: $(SRC_COMMON_DIR)/%.cpp Makefile
+	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(TARGET_DIR)/%.o: $(SRC_COMMON_DIR)/%.asm Makefile
+	nasm -f elf64 $< -o $@
