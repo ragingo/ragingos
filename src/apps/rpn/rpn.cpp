@@ -18,6 +18,9 @@ void Push(long value) {
 extern "C" int main(int argc, char** argv) {
     stack_ptr = -1;
 
+    // nm -C ./build/kernel/kernel.elf | grep printk
+    //reinterpret_cast<int (*)(const char*)>(0x0000000000110f50)("hello\n");
+
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "+") == 0) {
             long b = Pop();
