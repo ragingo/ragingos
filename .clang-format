@@ -35,7 +35,7 @@ IncludeCategories:
   - Regex:           '^".+'
     Priority:        2
 IndentCaseLabels: false
-IndentPPDirectives: 'AfterHash'
+IndentPPDirectives: 'None'
 IndentWidth: 4
 KeepEmptyLinesAtTheStartOfBlocks: true
 Language: 'Cpp'
