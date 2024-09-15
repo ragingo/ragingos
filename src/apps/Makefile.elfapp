@@ -4,6 +4,13 @@ CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mcmodel=large \
             -fno-exceptions -fno-rtti -std=c++17
 LDFLAGS += --entry main -z norelro --image-base 0xffff800000000000 --static
 
+SRC_DIR = .
+SRC_FILES := $(shell find $(SRC_DIR) -name '*.c' -or -name '*.cpp' -or -name '*.asm')
+
+OBJS := $(patsubst $(SRC_DIR)/%.c,  $(TARGET_DIR)/%.o,$(filter %.c,  $(SRC_FILES))) \
+        $(patsubst $(SRC_DIR)/%.cpp,$(TARGET_DIR)/%.o,$(filter %.cpp,$(SRC_FILES))) \
+        $(patsubst $(SRC_DIR)/%.asm,$(TARGET_DIR)/%.o,$(filter %.asm,$(SRC_FILES)))
+
 .PHONY: all
 all: setup $(TARGET)
 
@@ -11,8 +18,11 @@ all: setup $(TARGET)
 setup:
 	mkdir -p $(TARGET_DIR)
 
-$(TARGET): $(TARGET).o Makefile
-	ld.lld $(LDFLAGS) -o $@ $< -lc -lc++ -lc++abi
+$(TARGET): $(OBJS) Makefile
+	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi
 
 $(TARGET_DIR)/%.o: %.cpp Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(TARGET_DIR)/%.o: %.asm Makefile
+	nasm -f elf64 -o $@ $<
