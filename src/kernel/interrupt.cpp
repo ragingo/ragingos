@@ -34,10 +34,6 @@ namespace {
         task_manager->SendMessage(1, Message { Message::kInterruptXHCI });
         NotifyEndOfInterrupt();
     }
-
-    __attribute__((interrupt)) void IntHandlerLAPICTimer(InterruptFrame* frame) {
-        LAPICTimerOnInterrupt();
-    }
 }  // namespace
 
 void InitializeInterrupt() {
