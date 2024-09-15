@@ -21,6 +21,9 @@ setup:
 $(TARGET): $(OBJS) Makefile
 	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi
 
+$(TARGET_DIR)/%.o: %.c Makefile
+	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
 $(TARGET_DIR)/%.o: %.cpp Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
