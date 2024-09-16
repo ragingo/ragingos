@@ -1,4 +1,2 @@
-TARGET = ../../../build/apps/eye
-TARGET_DIR = ../../../build/apps
-
+TARGET = eye
 include ../Makefile.elfapp

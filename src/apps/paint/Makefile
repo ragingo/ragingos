@@ -1,4 +1,2 @@
-TARGET = ../../../build/apps/paint
-TARGET_DIR = ../../../build/apps
-
+TARGET = paint
 include ../Makefile.elfapp

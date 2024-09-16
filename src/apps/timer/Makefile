@@ -1,4 +1,2 @@
-TARGET = ../../../build/apps/timer
-TARGET_DIR = ../../../build/apps
-
+TARGET = timer
 include ../Makefile.elfapp

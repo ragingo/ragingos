@@ -1,4 +1,2 @@
-TARGET = ../../../build/apps/lines
-TARGET_DIR = ../../../build/apps
-
+TARGET = lines
 include ../Makefile.elfapp

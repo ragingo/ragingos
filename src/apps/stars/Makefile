@@ -1,4 +1,2 @@
-TARGET = ../../../build/apps/stars
-TARGET_DIR = ../../../build/apps
-
+TARGET = stars
 include ../Makefile.elfapp

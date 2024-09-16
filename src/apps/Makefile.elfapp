@@ -4,6 +4,9 @@ CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mcmodel=large \
             -fno-exceptions -fno-rtti -std=c++17
 LDFLAGS += --entry main -z norelro --image-base 0xffff800000000000 --static
 
+include ../Makefile.conf
+TARGET := $(TARGET_DIR)/$(TARGET)
+
 SRC_DIR := .
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.c' -or -name '*.cpp' -or -name '*.asm')
 

@@ -1,4 +1,2 @@
-TARGET = ../../../build/apps/large
-TARGET_DIR = ../../../build/apps
-
+TARGET = large
 include ../Makefile.elfapp

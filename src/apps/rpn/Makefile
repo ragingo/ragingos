@@ -1,4 +1,2 @@
-TARGET = ../../../build/apps/rpn
-TARGET_DIR = ../../../build/apps
-
+TARGET = rpn
 include ../Makefile.elfapp

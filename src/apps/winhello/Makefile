@@ -1,4 +1,2 @@
-TARGET = ../../../build/apps/winhello
-TARGET_DIR = ../../../build/apps
-
+TARGET = winhello
 include ../Makefile.elfapp
