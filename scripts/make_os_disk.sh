@@ -37,7 +37,7 @@ sudo cp "$EFI_FILE_PATH" "$MOUNT_POINT/EFI/BOOT/BOOTX64.EFI"
 sudo cp "$KERNEL_FILE_PATH" "$MOUNT_POINT/$(basename $KERNEL_FILE_PATH)"
 
 sudo mkdir -p $MOUNT_POINT/apps
-sudo rsync -rltD --exclude='*.o' $OUTPUT_PATH/apps/ $MOUNT_POINT
+sudo rsync -rltD --exclude='*.o' $OUTPUT_PATH/apps/ $MOUNT_POINT/apps
 
 sudo ls -lr $MOUNT_POINT
 
