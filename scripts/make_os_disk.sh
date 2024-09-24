@@ -1,15 +1,17 @@
 #!/bin/bash -eux
 
 # 出力先ディレクトリ
-readonly OUTPUT_PATH=./build
+readonly BUILD_PATH=./build
+# リソースディレクトリ
+readonly RESOURCE_PATH=./res
 # ボリューム名
 readonly VOLUME_NAME=RAGINGOS
 # .efi を書き込むイメージファイル名
-readonly DISK_FILE_PATH=$OUTPUT_PATH/disk.img
+readonly DISK_FILE_PATH=$BUILD_PATH/disk.img
 # .efi
 readonly EFI_FILE_PATH=$1
 # kernel.elf
-readonly KERNEL_FILE_PATH=$OUTPUT_PATH/kernel/kernel.elf
+readonly KERNEL_FILE_PATH=$BUILD_PATH/kernel/kernel.elf
 # マウントポイント
 readonly MOUNT_POINT=./build/mnt
 
@@ -37,7 +39,10 @@ sudo cp "$EFI_FILE_PATH" "$MOUNT_POINT/EFI/BOOT/BOOTX64.EFI"
 sudo cp "$KERNEL_FILE_PATH" "$MOUNT_POINT/$(basename $KERNEL_FILE_PATH)"
 
 sudo mkdir -p $MOUNT_POINT/apps
-sudo rsync -rltD --exclude='*.o' $OUTPUT_PATH/apps/ $MOUNT_POINT/apps
+sudo rsync -rltD --exclude='*.o' $BUILD_PATH/apps/ $MOUNT_POINT/apps
+
+sudo mkdir -p $MOUNT_POINT/res
+sudo rsync -rltD $RESOURCE_PATH/ $MOUNT_POINT/res
 
 sudo ls -lr $MOUNT_POINT
 
