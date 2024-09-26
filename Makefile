@@ -24,7 +24,7 @@ build_edk2:
 
 .PHONY: make_os_disk
 make_os_disk:
-	./scripts/make_os_disk.sh ~/edk2/Build/RagingosLoaderX64/DEBUG_CLANG38/X64/Loader.efi
+	./scripts/make_os_disk.sh
 
 .PHONY: run_os_disk
 run_os_disk:

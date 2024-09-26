@@ -1,8 +1,8 @@
 #!/bin/bash -ex
 
-readonly EDX2_PATH=~/edk2
+source ./scripts/buildenv.sh
 
-pushd $EDX2_PATH
+pushd $EDK2_HOME
 
 # memo: ./edksetup.sh: line 47: WORKSPACE: unbound variable
 source ./edksetup.sh

@@ -1,7 +1,6 @@
 #!/bin/bash -eux
 
-# shellcheck disable=SC1090
-source ~/osbook/devenv/buildenv.sh
+source ./scripts/buildenv.sh
 
 mkdir -p ./build/kernel
 

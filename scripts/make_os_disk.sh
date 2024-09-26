@@ -1,5 +1,7 @@
 #!/bin/bash -eux
 
+source ./scripts/buildenv.sh
+
 # 出力先ディレクトリ
 readonly BUILD_PATH=./build
 # リソースディレクトリ
@@ -8,8 +10,6 @@ readonly RESOURCE_PATH=./res
 readonly VOLUME_NAME=RAGINGOS
 # .efi を書き込むイメージファイル名
 readonly DISK_FILE_PATH=$BUILD_PATH/disk.img
-# .efi
-readonly EFI_FILE_PATH=$1
 # kernel.elf
 readonly KERNEL_FILE_PATH=$BUILD_PATH/kernel/kernel.elf
 # マウントポイント
@@ -30,8 +30,6 @@ mkfs.fat -n "$VOLUME_NAME" -s 2 -f 2 -R 32 -F 32 $DISK_FILE_PATH
 # マウント先ディレクトリを作成
 mkdir -p $MOUNT_POINT
 
-# 📝 WSL1 Ubuntu 20.04 で実行すると "mount: ./mnt: mount failed: Operation not permitted." が発生した
-# 📝 WSL2 に変換したら成功した
 sudo mount -o loop $DISK_FILE_PATH $MOUNT_POINT
 
 sudo mkdir -p $MOUNT_POINT/EFI/BOOT

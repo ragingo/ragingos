@@ -19,22 +19,6 @@ pushd workspace
 git clone https://github.com/uchan-nos/mikanos.git
 popd
 
-# お手本を動かしてみる場合はこれを実行
-pushd edk2
-ln -s $HOME/workspace/mikanos/MikanLoaderPkg ./
-ls MikanLoaderPkg/Main.c
-source edksetup.sh
-vi Conf/target.txt # MikanLoaderPkg/MikanLoaderPkg.dsc, CLANG38, X64
-build
-ls Build/MikanLoaderX64/DEBUG_CLANG38/X64/Loader.efi
-popd
-
-source $HOME/osbook/devenv/buildenv.sh
-pushd $HOME/workspace/mikanos
-./build.sh
-./build.sh run
-popd
-
 # day02 あたりが終わったら差し替え
 pushd edk2
 ln -s $HOME/ragingos/src/RagingosLoaderPkg ./

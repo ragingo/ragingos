@@ -1,9 +1,8 @@
 #!/bin/bash -eux
 
-readonly APPS_PATH=./src/apps
+source ./scripts/buildenv.sh
 
-# shellcheck disable=SC1090
-source ~/osbook/devenv/buildenv.sh
+readonly APPS_PATH=./src/apps
 
 for makefile in $(ls $APPS_PATH/*/Makefile)
 do
