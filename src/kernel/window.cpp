@@ -22,6 +22,25 @@ namespace {
         fill_rect(pos + Vector2D<int> { 0, size.y }, { size.x, 1 }, border_light);
         fill_rect(pos + Vector2D<int> { size.x, 0 }, { 1, size.y }, border_light);
     }
+
+    const int kCloseButtonWidth = 16;
+    const int kCloseButtonHeight = 14;
+    const char close_button[kCloseButtonHeight][kCloseButtonWidth + 1] = {
+        "...............@",
+        ".:::::::::::::$@",
+        ".:::::::::::::$@",
+        ".:::@@::::@@::$@",
+        ".::::@@::@@:::$@",
+        ".:::::@@@@::::$@",
+        ".::::::@@:::::$@",
+        ".:::::@@@@::::$@",
+        ".::::@@::@@:::$@",
+        ".:::@@::::@@::$@",
+        ".:::::::::::::$@",
+        ".:::::::::::::$@",
+        ".$$$$$$$$$$$$$$@",
+        "@@@@@@@@@@@@@@@@",
+    };
 }  // namespace
 
 Window::Window(int width, int height, PixelFormat shadow_format)
@@ -101,6 +120,10 @@ void Window::Move(Vector2D<int> dst_pos, const Rectangle<int>& src) {
     shadow_buffer_.Move(dst_pos, src);
 }
 
+WindowRegion Window::GetWindowRegion(Vector2D<int> pos) {
+    return WindowRegion::kOther;
+}
+
 ToplevelWindow::ToplevelWindow(int width, int height, PixelFormat shadow_format,
                                const std::string& title)
     : Window { width, height, shadow_format }
@@ -118,30 +141,23 @@ void ToplevelWindow::Deactivate() {
     DrawWindowTitle(*Writer(), title_.c_str(), false);
 }
 
+WindowRegion ToplevelWindow::GetWindowRegion(Vector2D<int> pos) {
+    if (pos.x < 2 || Width() - 2 <= pos.x ||
+        pos.y < 2 || Height() - 2 <= pos.y) {
+        return WindowRegion::kBorder;
+    } else if (pos.y < kTopLeftMargin.y) {
+        if (Width() - 5 - kCloseButtonWidth <= pos.x && pos.x < Width() - 5 &&
+            5 <= pos.y && pos.y < 5 + kCloseButtonHeight) {
+            return WindowRegion::kCloseButton;
+        }
+        return WindowRegion::kTitleBar;
+    }
+    return WindowRegion::kOther;
+}
+
 Vector2D<int> ToplevelWindow::InnerSize() const {
     return Size() - kTopLeftMargin - kBottomRightMargin;
 }
-
-namespace {
-    const int kCloseButtonWidth = 16;
-    const int kCloseButtonHeight = 14;
-    const char close_button[kCloseButtonHeight][kCloseButtonWidth + 1] = {
-        "...............@",
-        ".:::::::::::::$@",
-        ".:::::::::::::$@",
-        ".:::@@::::@@::$@",
-        ".::::@@::@@:::$@",
-        ".:::::@@@@::::$@",
-        ".::::::@@:::::$@",
-        ".:::::@@@@::::$@",
-        ".::::@@::@@:::$@",
-        ".:::@@::::@@::$@",
-        ".:::::::::::::$@",
-        ".:::::::::::::$@",
-        ".$$$$$$$$$$$$$$@",
-        "@@@@@@@@@@@@@@@@",
-    };
-}  // namespace
 
 void DrawWindow(PixelWriter& writer, const char* title) {
     auto fill_rect = [&writer](Vector2D<int> pos, Vector2D<int> size, uint32_t c) {

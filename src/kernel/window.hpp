@@ -12,6 +12,13 @@
 #include "graphics.hpp"
 #include "frame_buffer.hpp"
 
+enum class WindowRegion {
+    kTitleBar,
+    kCloseButton,
+    kBorder,
+    kOther,
+};
+
 /** @brief Window クラスはグラフィックの表示領域を表す。
  *
  * タイトルやメニューがあるウィンドウだけでなく，マウスカーソルの表示領域なども対象とする。
@@ -19,7 +26,7 @@
 class Window {
 public:
     /** @brief WindowWriter は Window と関連付けられた PixelWriter を提供する。
-   */
+     */
     class WindowWriter : public PixelWriter {
     public:
         WindowWriter(Window& window)
@@ -44,11 +51,11 @@ public:
     Window& operator=(const Window& rhs) = delete;
 
     /** @brief 与えられた FrameBuffer にこのウィンドウの表示領域を描画する。
-   *
-   * @param dst  描画先
-   * @param pos  dst の左上を基準としたウィンドウの位置
-   * @param area  dst の左上を基準とした描画対象範囲
-   */
+     *
+     * @param dst  描画先
+     * @param pos  dst の左上を基準としたウィンドウの位置
+     * @param area  dst の左上を基準とした描画対象範囲
+     */
     void DrawTo(FrameBuffer& dst, Vector2D<int> pos, const Rectangle<int>& area);
     /** @brief 透過色を設定する。 */
     void SetTransparentColor(std::optional<PixelColor> c);
@@ -68,15 +75,16 @@ public:
     Vector2D<int> Size() const;
 
     /** @brief このウィンドウの平面描画領域内で，矩形領域を移動する。
-   *
-   * @param src_pos   移動元矩形の原点
-   * @param src_size  移動元矩形の大きさ
-   * @param dst_pos   移動先の原点
-   */
+     *
+     * @param src_pos   移動元矩形の原点
+     * @param src_size  移動元矩形の大きさ
+     * @param dst_pos   移動先の原点
+     */
     void Move(Vector2D<int> dst_pos, const Rectangle<int>& src);
 
     virtual void Activate() {}
     virtual void Deactivate() {}
+    virtual WindowRegion GetWindowRegion(Vector2D<int> pos);
 
 private:
     int width_, height_;
@@ -117,6 +125,7 @@ public:
 
     virtual void Activate() override;
     virtual void Deactivate() override;
+    virtual WindowRegion GetWindowRegion(Vector2D<int> pos) override;
 
     InnerAreaWriter* InnerWriter() { return &inner_writer_; }
     Vector2D<int> InnerSize() const;
