@@ -1,2 +1,2 @@
-TARGET = onlyhlt
+TARGET = mandel
 include ../Makefile.elfapp

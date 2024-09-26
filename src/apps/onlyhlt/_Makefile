@@ -1,0 +1,16 @@
+# ビルドに失敗するのでファイル名を変更
+
+TARGET = onlyhlt
+
+include ../Makefile.conf
+TARGET := $(TARGET_DIR)/$(TARGET)
+
+.PHONY: all
+all: setup $(TARGET)
+
+.PHONY: setup
+setup:
+	mkdir -p $(TARGET_DIR)
+
+$(TARGET_DIR)/%.o: %.asm Makefile
+	nasm -f bin -o $@ $<

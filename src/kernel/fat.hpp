@@ -79,69 +79,77 @@ namespace fat {
     void Initialize(void* volume_image);
 
     /** @brief 指定されたクラスタの先頭セクタが置いてあるメモリアドレスを返す。
-     *
-     * @param cluster  クラスタ番号（2 始まり）
-     * @return クラスタの先頭セクタが置いてあるメモリ領域のアドレス
-     */
+ *
+ * @param cluster  クラスタ番号（2 始まり）
+ * @return クラスタの先頭セクタが置いてあるメモリ領域のアドレス
+ */
     uintptr_t GetClusterAddr(unsigned long cluster);
 
     /** @brief 指定されたクラスタの先頭セクタが置いてあるメモリ領域を返す。
-     *
-     * @param cluster  クラスタ番号（2 始まり）
-     * @return クラスタの先頭セクタが置いてあるメモリ領域へのポインタ
-     */
+ *
+ * @param cluster  クラスタ番号（2 始まり）
+ * @return クラスタの先頭セクタが置いてあるメモリ領域へのポインタ
+ */
     template<class T>
     T* GetSectorByCluster(unsigned long cluster) {
         return reinterpret_cast<T*>(GetClusterAddr(cluster));
     }
 
     /** @brief ディレクトリエントリの短名を基本名と拡張子名に分割して取得する。
-     * パディングされた空白文字（0x20）は取り除かれ，ヌル終端される。
-     *
-     * @param entry  ファイル名を得る対象のディレクトリエントリ
-     * @param base  拡張子を除いたファイル名（9 バイト以上の配列）
-     * @param ext  拡張子（4 バイト以上の配列）
-     */
+ * パディングされた空白文字（0x20）は取り除かれ，ヌル終端される。
+ *
+ * @param entry  ファイル名を得る対象のディレクトリエントリ
+ * @param base  拡張子を除いたファイル名（9 バイト以上の配列）
+ * @param ext  拡張子（4 バイト以上の配列）
+ */
     void ReadName(const DirectoryEntry& entry, char* base, char* ext);
 
     /** @brief ディレクトリエントリの短名を dest にコピーする。
-     * 短名の拡張子が空なら "<base>" を，空でなければ "<base>.<ext>" をコピー。
-     *
-     * @param entry  ファイル名を得る対象のディレクトリエントリ
-     * @param dest  基本名と拡張子を結合した文字列を格納するに十分な大きさの配列。
-     */
+ * 短名の拡張子が空なら "<base>" を，空でなければ "<base>.<ext>" をコピー。
+ *
+ * @param entry  ファイル名を得る対象のディレクトリエントリ
+ * @param dest  基本名と拡張子を結合した文字列を格納するに十分な大きさの配列。
+ */
     void FormatName(const DirectoryEntry& entry, char* dest);
+
+    /** @brief ディレクトリエントリの更新日時を dest にコピーする。
+ * 日時は "YYYY-MM-DD hh:mm:ss" 形式で表現する。
+ *
+ * @param entry  更新日時を得る対象のディレクトリエントリ
+ * @param dest  更新日時を表現する文字列を格納するに十分な大きさの配列。
+ */
+    void FormatWriteTime(const DirectoryEntry& entry, char* dest);
 
     static const unsigned long kEndOfClusterchain = 0x0ffffffflu;
 
     /** @brief 指定されたクラスタの次のクラスタ番号を返す。
-     *
-     * @param cluster  クラスタ番号
-     * @return 次のクラスタ番号（無い場合は kEndOfClusterchain）
-     */
+ *
+ * @param cluster  クラスタ番号
+ * @return 次のクラスタ番号（無い場合は kEndOfClusterchain）
+ */
     unsigned long NextCluster(unsigned long cluster);
 
     /** @brief 指定されたディレクトリからファイルを探す。
-     *
-     * @param name  8+3形式のファイル名（大文字小文字は区別しない）
-     * @param directory_cluster  ディレクトリの開始クラスタ（省略するとルートディレクトリから検索する）
-     * @return ファイルまたはディレクトリを表すエントリと，末尾スラッシュを示すフラグの組。
-     *   ファイルまたはディレクトリが見つからなければ nullptr。
-     *   エントリの直後にスラッシュがあれば true。
-     *   パスの途中のエントリがファイルであれば探索を諦め，そのエントリと true を返す。
-     */
+ *
+ * @param name  8+3形式のファイル名（大文字小文字は区別しない）
+ * @param directory_cluster  ディレクトリの開始クラスタ（省略するとルートディレクトリから検索する）
+ * @return ファイルまたはディレクトリを表すエントリと，末尾スラッシュを示すフラグの組。
+ *   ファイルまたはディレクトリが見つからなければ nullptr。
+ *   エントリの直後にスラッシュがあれば true。
+ *   パスの途中のエントリがファイルであれば探索を諦め，そのエントリと true を返す。
+ */
     std::pair<DirectoryEntry*, bool>
     FindFile(const char* path, unsigned long directory_cluster = 0);
 
     bool NameIsEqual(const DirectoryEntry& entry, const char* name);
 
     /** @brief 指定されたファイルの内容をバッファへコピーする。
-     *
-     * @param buf  ファイル内容の格納先
-     * @param len  バッファの大きさ（バイト単位）
-     * @param entry  ファイルを表すディレクトリエントリ
-     * @return  読み込んだバイト数
-     */
+ *
+ * @param buf  ファイル内容の格納先
+ * @param len  バッファの大きさ（バイト単位）
+ * @param entry  ファイルを表すディレクトリエントリ
+ * @return  読み込んだバイト数
+ */
     size_t LoadFile(void* buf, size_t len, DirectoryEntry& entry);
 
     bool IsEndOfClusterchain(unsigned long cluster);
@@ -149,40 +157,40 @@ namespace fat {
     uint32_t* GetFAT();
 
     /** @brief 指定したクラスタ数だけクラスタチェーンを伸長する。
-     *
-     * @param eoc_cluster  伸長したいクラスタチェーンに属するいずれかのクラスタ番号
-     * @param n  伸長するクラスタ数
-     * @return  伸長後のチェーンにおける最後尾のクラスタ番号
-     */
+ *
+ * @param eoc_cluster  伸長したいクラスタチェーンに属するいずれかのクラスタ番号
+ * @param n  伸長するクラスタ数
+ * @return  伸長後のチェーンにおける最後尾のクラスタ番号
+ */
     unsigned long ExtendCluster(unsigned long eoc_cluster, size_t n);
 
     /** @brief 指定したディレクトリの空きエントリを 1 つ返す。
-     * ディレクトリが満杯ならクラスタを 1 つ伸長して空きエントリを確保する。
-     *
-     * @param dir_cluster  空きエントリを探すディレクトリ
-     * @return 空きエントリ
-     */
+ * ディレクトリが満杯ならクラスタを 1 つ伸長して空きエントリを確保する。
+ *
+ * @param dir_cluster  空きエントリを探すディレクトリ
+ * @return 空きエントリ
+ */
     DirectoryEntry* AllocateEntry(unsigned long dir_cluster);
 
     /** @brief ディレクトリエントリに短ファイル名をセットする。
-     *
-     * @param entry  ファイル名を設定する対象のディレクトリエントリ
-     * @param name  基本名と拡張子をドットで結合したファイル名
-     */
+ *
+ * @param entry  ファイル名を設定する対象のディレクトリエントリ
+ * @param name  基本名と拡張子をドットで結合したファイル名
+ */
     void SetFileName(DirectoryEntry& entry, const char* name);
 
     /** @brief 指定されたパスにファイルエントリを作成する。
-     *
-     * @param path  ファイルパス
-     * @return 新規作成されたファイルエントリ
-     */
+ *
+ * @param path  ファイルパス
+ * @return 新規作成されたファイルエントリ
+ */
     WithError<DirectoryEntry*> CreateFile(const char* path);
 
     /** @brief 指定した数の空きクラスタからなるチェーンを構築する。
-     *
-     * @param n  クラスタ数
-     * @return  構築したチェーンの先頭クラスタ番号
-     */
+ *
+ * @param n  クラスタ数
+ * @return  構築したチェーンの先頭クラスタ番号
+ */
     unsigned long AllocateClusterChain(size_t n);
 
     class FileDescriptor : public ::FileDescriptor {

@@ -1,6 +1,7 @@
 #include <Uefi.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/PrintLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -160,7 +161,7 @@ EFI_STATUS OpenGOP(EFI_HANDLE image_handle,
         return status;
     }
 
-    FreePool(gop_handles);
+    gBS->FreePool(gop_handles);
 
     return EFI_SUCCESS;
 }
@@ -358,7 +359,7 @@ EFI_STATUS EFIAPI UefiMain(
     VOID* kernel_buffer;
     status = ReadFile(kernel_file, &kernel_buffer);
     if (EFI_ERROR(status)) {
-        Print(L"error: %r", status);
+        Print(L"error: %r\n", status);
         Halt();
     }
 
@@ -392,7 +393,7 @@ EFI_STATUS EFIAPI UefiMain(
     if (status == EFI_SUCCESS) {
         status = ReadFile(volume_file, &volume_image);
         if (EFI_ERROR(status)) {
-            Print(L"failed to read volume file: %r", status);
+            Print(L"failed to read volume file: %r\n", status);
             Halt();
         }
     } else {
@@ -419,22 +420,6 @@ EFI_STATUS EFIAPI UefiMain(
         }
     }
 
-    status = gBS->ExitBootServices(image_handle, memmap.map_key);
-    if (EFI_ERROR(status)) {
-        status = GetMemoryMap(&memmap);
-        if (EFI_ERROR(status)) {
-            Print(L"failed to get memory map: %r\n", status);
-            Halt();
-        }
-        status = gBS->ExitBootServices(image_handle, memmap.map_key);
-        if (EFI_ERROR(status)) {
-            Print(L"Could not exit boot service: %r\n", status);
-            Halt();
-        }
-    }
-
-    UINT64 entry_addr = *(UINT64*)(kernel_first_addr + 24);
-
     struct FrameBufferConfig config = {
         (UINT8*)gop->Mode->FrameBufferBase,
         gop->Mode->Info->PixelsPerScanLine,
@@ -454,6 +439,22 @@ EFI_STATUS EFIAPI UefiMain(
         Halt();
     }
 
+    status = gBS->ExitBootServices(image_handle, memmap.map_key);
+    if (EFI_ERROR(status)) {
+        status = GetMemoryMap(&memmap);
+        if (EFI_ERROR(status)) {
+            Print(L"failed to get memory map: %r\n", status);
+            Halt();
+        }
+        status = gBS->ExitBootServices(image_handle, memmap.map_key);
+        if (EFI_ERROR(status)) {
+            Print(L"Could not exit boot service: %r\n", status);
+            Halt();
+        }
+    }
+
+    UINT64 entry_addr = *(UINT64*)(kernel_first_addr + 24);
+
     VOID* acpi_table = NULL;
     for (UINTN i = 0; i < system_table->NumberOfTableEntries; ++i) {
         if (CompareGuid(&gEfiAcpiTableGuid,
@@ -466,9 +467,10 @@ EFI_STATUS EFIAPI UefiMain(
     typedef void EntryPointType(const struct FrameBufferConfig*,
                                 const struct MemoryMap*,
                                 const VOID*,
-                                VOID*);
+                                VOID*,
+                                EFI_RUNTIME_SERVICES*);
     EntryPointType* entry_point = (EntryPointType*)entry_addr;
-    entry_point(&config, &memmap, acpi_table, volume_image);
+    entry_point(&config, &memmap, acpi_table, volume_image, gRT);
 
     Print(L"All done\n");
 

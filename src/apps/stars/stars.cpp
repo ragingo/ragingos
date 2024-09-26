@@ -1,13 +1,26 @@
-#include <cstdlib>
 #include <random>
 #include "../syscall.h"
 
 static constexpr int kWidth = 100, kHeight = 100;
 
-extern "C" void main(int argc, char** argv) {
+void WaitEvent() {
+    AppEvent events[1];
+    while (true) {
+        auto [n, err] = SyscallReadEvent(events, 1);
+        if (err) {
+            fprintf(stderr, "ReadEvent failed: %s\n", strerror(err));
+            return;
+        }
+        if (events[0].type == AppEvent::kQuit) {
+            return;
+        }
+    }
+}
+
+int main(int argc, char** argv) {
     auto [layer_id, err_openwin] = SyscallOpenWindow(kWidth + 8, kHeight + 28, 10, 10, "stars");
     if (err_openwin) {
-        exit(err_openwin);
+        return err_openwin;
     }
 
     SyscallWinFillRectangle(layer_id | LAYER_NO_REDRAW,
@@ -35,5 +48,8 @@ extern "C" void main(int argc, char** argv) {
            num_stars,
            (tick_end.value - tick_start) * 1000 / timer_freq);
 
-    exit(0);
+    WaitEvent();
+    SyscallCloseWindow(layer_id);
+
+    return 0;
 }

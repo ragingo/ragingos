@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cstdio>
-#include <cstdlib>
 #include <algorithm>
 #include "../syscall.h"
 
@@ -23,10 +22,10 @@ void DrawEye(uint64_t layer_id_flags,
     SyscallWinFillRectangle(layer_id_flags, eye_x - kEyeSize / 2, eye_y - kEyeSize / 2, kEyeSize, kEyeSize, color);
 }
 
-extern "C" void main(int argc, char** argv) {
+int main(int argc, char** argv) {
     auto [layer_id, err_openwin] = SyscallOpenWindow(kCanvasSize + 8, kCanvasSize + 28, 10, 10, "eye");
     if (err_openwin) {
-        exit(err_openwin);
+        return err_openwin;
     }
 
     SyscallWinFillRectangle(layer_id, 4, 24, kCanvasSize, kCanvasSize, 0xffffff);
@@ -50,5 +49,5 @@ extern "C" void main(int argc, char** argv) {
         }
     }
     SyscallCloseWindow(layer_id);
-    exit(0);
+    return 0;
 }

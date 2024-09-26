@@ -1,7 +1,10 @@
 #include "terminal.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstring>
 #include <limits>
+#include <vector>
 
 #include "font.hpp"
 #include "layer.hpp"
@@ -13,6 +16,9 @@
 #include "timer.hpp"
 #include "keyboard.hpp"
 #include "logger.hpp"
+#include "uefi.hpp"
+#include "usb/classdriver/cdc.hpp"
+#include "usb/xhci/xhci.hpp"
 
 namespace {
 
@@ -95,7 +101,8 @@ namespace {
             LinearAddress4Level dest_addr;
             dest_addr.value = phdr[i].p_vaddr;
             last_addr = std::max(last_addr, phdr[i].p_vaddr + phdr[i].p_memsz);
-            const auto num_4kpages = (phdr[i].p_memsz + 4095) / 4096;
+            const auto num_4kpages =
+                ((phdr[i].p_vaddr & 4095) + phdr[i].p_memsz + 4095) / 4096;
 
             // setup pagemaps as readonly (writable = false)
             if (auto err = SetupPageMaps(dest_addr, num_4kpages, false)) {
@@ -146,15 +153,32 @@ namespace {
         return FreePageMap(reinterpret_cast<PageMapEntry*>(cr3));
     }
 
-    void ListAllEntries(FileDescriptor& fd, uint32_t dir_cluster) {
+    void PrintFileAttr(FileDescriptor& fd, const fat::DirectoryEntry& dir) {
+        if ((uint8_t)dir.attr & (uint8_t)fat::Attribute::kDirectory) {
+            PrintToFD(fd, "%10s", "<DIR>");
+        } else {
+            PrintToFD(fd, "%10lu", (unsigned long)dir.file_size);
+        }
+        char date[20], name[13];
+        fat::FormatWriteTime(dir, date);
+        fat::FormatName(dir, name);
+        PrintToFD(fd, " %s %s\n", date, name);
+    }
+
+    void ListAllEntries(FileDescriptor& fd, uint32_t dir_cluster, bool verbose) {
         const auto kEntriesPerCluster =
             fat::bytes_per_cluster / sizeof(fat::DirectoryEntry);
 
+        const bool multi_per_line = !verbose && fd.IsTerminal();
+        int count = 0;
         while (dir_cluster != fat::kEndOfClusterchain) {
             auto dir = fat::GetSectorByCluster<fat::DirectoryEntry>(dir_cluster);
 
             for (int i = 0; i < kEntriesPerCluster; ++i) {
                 if (dir[i].name[0] == 0x00) {
+                    if (multi_per_line && (count % 4) != 0) {
+                        PrintToFD(fd, "\n");
+                    }
                     return;
                 } else if (static_cast<uint8_t>(dir[i].name[0]) == 0xe5) {
                     continue;
@@ -162,9 +186,25 @@ namespace {
                     continue;
                 }
 
-                char name[13];
-                fat::FormatName(dir[i], name);
-                PrintToFD(fd, "%s\n", name);
+                if (verbose) {
+                    PrintFileAttr(fd, dir[i]);
+                } else {
+                    char name[13];
+                    fat::FormatName(dir[i], name);
+                    if (!multi_per_line) {
+                        PrintToFD(fd, "%s\n", name);
+                    } else {
+                        if (dir[i].attr == fat::Attribute::kDirectory) {
+                            PrintToFD(fd, "\033[94m%-14s\033[0m", name);
+                        } else {
+                            PrintToFD(fd, "%-14s", name);
+                        }
+                        ++count;
+                        if ((count % 4) == 0) {
+                            PrintToFD(fd, "\n");
+                        }
+                    }
+                }
             }
 
             dir_cluster = fat::NextCluster(dir_cluster);
@@ -318,7 +358,7 @@ Rectangle<int> Terminal::InputKey(
         draw_area.pos = ToplevelWindow::kTopLeftMargin;
         draw_area.size = window_->InnerSize();
     } else if (ascii == '\b') {
-        if (cursor_.x > 0) {
+        if (cursor_.x > 1) {
             --cursor_.x;
             if (show_window_) {
                 FillRectangle(*window_->Writer(), CalcCursorPos(), { 8, 16 }, { 0, 0, 0 });
@@ -364,6 +404,15 @@ void Terminal::ExecuteLine() {
     char* first_arg = strchr(&linebuf_[0], ' ');
     char* redir_char = strchr(&linebuf_[0], '>');
     char* pipe_char = strchr(&linebuf_[0], '|');
+    char* command_end = &linebuf_[strlen(&linebuf_[0])];
+
+    auto trim_space = [&command](char* end_ptr) {
+        while (command < end_ptr && isspace(end_ptr[-1])) {
+            *--end_ptr = 0;
+        }
+    };
+    trim_space(command_end);
+
     if (first_arg) {
         *first_arg = 0;
         do {
@@ -376,6 +425,7 @@ void Terminal::ExecuteLine() {
 
     if (redir_char) {
         *redir_char = 0;
+        trim_space(redir_char);
         char* redir_dest = &redir_char[1];
         while (isspace(*redir_dest)) {
             ++redir_dest;
@@ -402,6 +452,7 @@ void Terminal::ExecuteLine() {
 
     if (pipe_char) {
         *pipe_char = 0;
+        trim_space(pipe_char);
         char* subcommand = &pipe_char[1];
         while (isspace(*subcommand)) {
             ++subcommand;
@@ -446,15 +497,24 @@ void Terminal::ExecuteLine() {
                       dev.class_code.base, dev.class_code.sub, dev.class_code.interface);
         }
     } else if (strcmp(command, "ls") == 0) {
-        if (!first_arg || first_arg[0] == '\0') {
-            ListAllEntries(*files_[1], fat::boot_volume_image->root_cluster);
+        char* file_name = first_arg;
+        bool verbose = false;
+        if (file_name && file_name[0] == '-') {
+            for (++file_name; *file_name && !isspace(*file_name); ++file_name) {
+                if (*file_name == 'l')
+                    verbose = true;
+            }
+            while (isspace(*file_name)) file_name++;
+        }
+        if (!file_name || file_name[0] == '\0') {
+            ListAllEntries(*files_[1], fat::boot_volume_image->root_cluster, verbose);
         } else {
-            auto [dir, post_slash] = fat::FindFile(first_arg);
+            auto [dir, post_slash] = fat::FindFile(file_name);
             if (dir == nullptr) {
-                PrintToFD(*files_[2], "No such file or directory: %s\n", first_arg);
+                PrintToFD(*files_[2], "No such file or directory: %s\n", file_name);
                 exit_code = 1;
             } else if (dir->attr == fat::Attribute::kDirectory) {
-                ListAllEntries(*files_[1], dir->FirstCluster());
+                ListAllEntries(*files_[1], dir->FirstCluster(), verbose);
             } else {
                 char name[13];
                 fat::FormatName(*dir, name);
@@ -462,7 +522,15 @@ void Terminal::ExecuteLine() {
                     PrintToFD(*files_[2], "%s is not a directory\n", name);
                     exit_code = 1;
                 } else {
-                    PrintToFD(*files_[1], "%s\n", name);
+                    if (verbose) {
+                        PrintFileAttr(*files_[1], *dir);
+                    } else {
+                        if (files_[1]->IsTerminal() && dir->attr == fat::Attribute::kDirectory) {
+                            PrintToFD(*files_[1], "\033[94m%s\033[0m\n", name);
+                        } else {
+                            PrintToFD(*files_[1], "%s\n", name);
+                        }
+                    }
                 }
             }
         }
@@ -488,10 +556,11 @@ void Terminal::ExecuteLine() {
             char u8buf[1024];
             DrawCursor(false);
             while (true) {
-                if (ReadDelim(*fd, '\n', u8buf, sizeof(u8buf)) == 0) {
+                size_t read_size = ReadDelim(*fd, '\n', u8buf, sizeof(u8buf));
+                if (read_size == 0) {
                     break;
                 }
-                PrintToFD(*files_[1], "%s", u8buf);
+                files_[1]->Write(u8buf, read_size);
             }
             DrawCursor(true);
         }
@@ -510,6 +579,157 @@ void Terminal::ExecuteLine() {
         PrintToFD(*files_[1], "Phys total: %lu frames (%llu MiB)\n",
                   p_stat.total_frames,
                   p_stat.total_frames * kBytesPerFrame / 1024 / 1024);
+    } else if (strcmp(command, "date") == 0) {
+        EFI_TIME t;
+        uefi_rt->GetTime(&t, nullptr);
+        if (t.TimeZone == EFI_UNSPECIFIED_TIMEZONE) {
+            PrintToFD(*files_[1], "%d-%02d-%02d %02d:%02d:%02d\n",
+                      t.Year, t.Month, t.Day, t.Hour, t.Minute, t.Second);
+        } else {
+            PrintToFD(*files_[1], "%d-%02d-%02d %02d:%02d:%02d ",
+                      t.Year, t.Month, t.Day, t.Hour, t.Minute, t.Second);
+            if (t.TimeZone >= 0) {
+                PrintToFD(*files_[1], "+%02d%02d\n", t.TimeZone / 60, t.TimeZone % 60);
+            } else {
+                PrintToFD(*files_[1], "-%02d%02d\n", -t.TimeZone / 60, -t.TimeZone % 60);
+            }
+        }
+    } else if (strcmp(command, "reboot") == 0) {
+        uefi_rt->ResetSystem(EfiResetWarm, EFI_SUCCESS, 0, nullptr);
+    } else if (strcmp(command, "poweroff") == 0) {
+        uefi_rt->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, nullptr);
+    } else if (strcmp(command, "lsusb") == 0) {
+        auto devmgr = usb::xhci::controller->DeviceManager();
+        for (int slot = 1; slot < 256; ++slot) {
+            auto dev = devmgr->FindBySlot(slot);
+            if (!dev) {
+                continue;
+            }
+            PrintToFD(*files_[1], "Slot %d: ID %04x:%04x Class %d.%d.%d\n",
+                      slot,
+                      dev->DeviceDesc().vendor_id,
+                      dev->DeviceDesc().product_id,
+                      dev->DeviceDesc().device_class,
+                      dev->DeviceDesc().device_sub_class,
+                      dev->DeviceDesc().device_protocol);
+        }
+    } else if (strcmp(command, "usbtest") == 0) {
+        [&] {
+            if (!usb::cdc::driver) {
+                PrintToFD(*files_[2], "CDC device not exist\n");
+                exit_code = 1;
+                return;
+            }
+
+            size_t send_len;
+            if (first_arg && first_arg[0]) {
+                send_len = strlen(first_arg);
+                usb::cdc::driver->SendSerial(first_arg, send_len);
+            } else {
+                send_len = 1;
+                usb::cdc::driver->SendSerial("a", 1);
+            }
+
+            std::vector<uint8_t> buf(send_len);
+            int recv_len = usb::cdc::driver->ReceiveSerial(buf.data(), send_len);
+            while (recv_len == 0) {
+                recv_len = usb::cdc::driver->ReceiveSerial(buf.data(), send_len);
+            }
+            files_[1]->Write(buf.data(), recv_len);
+            PrintToFD(*files_[1], "\n");
+        }();
+    } else if (strcmp(command, "setbaud") == 0) {
+        [&] {
+            usb::cdc::LineCoding line_coding {
+                9600,
+                usb::cdc::CharFormat::kStopBit1,
+                usb::cdc::ParityType::kNone,
+                8
+            };
+
+            if (first_arg && first_arg[0]) {
+                char* endp;
+                line_coding.dte_rate = strtol(first_arg, &endp, 0);
+                if (*endp != '\0') {
+                    PrintToFD(*files_[2], "Baud rate must be an integer");
+                    exit_code = 1;
+                    return;
+                }
+            }
+
+            if (!usb::cdc::driver) {
+                PrintToFD(*files_[2], "CDC device not exist\n");
+                exit_code = 1;
+                return;
+            }
+
+            PrintToFD(*files_[2], "Setting baud rate to %u\n", line_coding.dte_rate);
+            usb::cdc::driver->SetLineCoding(line_coding);
+        }();
+    } else if (strcmp(command, "comproc") == 0) {
+        [&] {
+            if (!usb::cdc::driver) {
+                PrintToFD(*files_[2], "CDC device not exist\n");
+                exit_code = 1;
+                return;
+            }
+
+            std::vector<uint8_t> insn;
+
+            if (first_arg && strcmp(first_arg, "sample") == 0) {
+                const std::array<uint8_t, 14 * 2> kSample = {
+                    0x00,
+                    0x20,
+                    0xC1,
+                    0x00,
+                    0xA3,
+                    0x03,
+                    0x94,
+                    0x02,
+                    0xA0,
+                    0x00,
+                    0xC2,
+                    0x21,
+                    0xC0,
+                    0x20,
+                    0x00,
+                    0x20,
+                    0xB0,
+                    0x02,
+                    0xC1,
+                    0x00,
+                    0x00,
+                    0x21,
+                    0xC3,
+                    0x20,
+                    0xA4,
+                    0x00,
+                    0xFF,
+                    0xFF,
+                };
+                insn.resize(kSample.size());
+                std::copy(kSample.begin(), kSample.end(), insn.begin());
+            } else {
+                uint8_t buf[2];
+                while (files_[0]->Read(buf, 2) == 2) {
+                    insn.push_back(buf[0]);
+                    insn.push_back(buf[1]);
+                }
+                insn.push_back(0xff);
+                insn.push_back(0xff);
+            }
+
+            PrintToFD(*files_[1], "Sending instructions to ComProc CPU\n");
+            usb::cdc::driver->SendSerial(&insn[0], insn.size());
+
+            PrintToFD(*files_[1], "Receiving exit code from ComProc CPU\n");
+            uint8_t code = 0;
+            int recv_len = usb::cdc::driver->ReceiveSerial(&code, 1);
+            while (recv_len == 0) {
+                recv_len = usb::cdc::driver->ReceiveSerial(&code, 1);
+            }
+            PrintToFD(*files_[1], "exit_code=%d\n", code);
+        }();
     } else if (command[0] != 0) {
         auto file_entry = FindCommand(command);
         if (!file_entry) {
@@ -559,8 +779,8 @@ WithError<int> Terminal::ExecuteFile(fat::DirectoryEntry& file_entry,
     }
     auto argv = reinterpret_cast<char**>(args_frame_addr.value);
     int argv_len = 32;  // argv = 8x32 = 256 bytes
-    auto argbuf = reinterpret_cast<char*>(args_frame_addr.value + sizeof(char**) * argv_len);
-    int argbuf_len = 4096 - sizeof(char**) * argv_len;
+    auto argbuf = reinterpret_cast<char*>(args_frame_addr.value + sizeof(char*) * argv_len);
+    int argbuf_len = 4096 - sizeof(char*) * argv_len;
     auto argc = MakeArgVector(command, first_arg, argv, argv_len, argbuf, argbuf_len);
     if (argc.error) {
         return { 0, argc.error };
@@ -596,7 +816,68 @@ WithError<int> Terminal::ExecuteFile(fat::DirectoryEntry& file_entry,
     return { ret, FreePML4(task) };
 }
 
+const std::array<PixelColor, 8> kAnsiColorCodes = { {
+    { 0, 0, 0 },        // black
+    { 170, 0, 0 },      // red
+    { 0, 170, 0 },      // green
+    { 170, 85, 0 },     // yellow
+    { 0, 0, 170 },      // blue
+    { 170, 0, 170 },    // magenta
+    { 0, 170, 170 },    // cyan
+    { 170, 170, 170 },  // white
+} };
+const std::array<PixelColor, 8> kAnsiColorCodesBright = { {
+    { 85, 85, 85 },     // black
+    { 255, 85, 85 },    // red
+    { 85, 255, 85 },    // green
+    { 255, 255, 85 },   // yellow
+    { 85, 85, 255 },    // blue
+    { 255, 85, 255 },   // magenta
+    { 85, 255, 255 },   // cyan
+    { 255, 255, 255 },  // white
+} };
+
 void Terminal::Print(char32_t c) {
+    switch (esc_seq_state_) {
+    case EscSeqState::kInit:
+        if (c == U'\033') {  // ANSI エスケープシーケンス
+            esc_seq_state_ = EscSeqState::kEsc;
+            return;
+        }
+        break;
+    case EscSeqState::kEsc:
+        if (c == U'[') {
+            esc_seq_state_ = EscSeqState::kCSI;
+            return;
+        }
+        break;
+    case EscSeqState::kCSI:
+        if (U'0' <= c && c <= U'9') {
+            esc_seq_state_ = EscSeqState::kNum;
+            esc_seq_n_ = c - U'0';
+            return;
+        }
+        break;
+    case EscSeqState::kNum:
+        if (c == U'm') {
+            esc_seq_state_ = EscSeqState::kInit;
+            if (esc_seq_n_ == 0) {
+                text_color_ = PixelColor { 255, 255, 255 };
+            } else if (30 <= esc_seq_n_ && esc_seq_n_ <= 37) {
+                text_color_ = kAnsiColorCodes[esc_seq_n_ - 30];
+            } else if (90 <= esc_seq_n_ && esc_seq_n_ <= 97) {
+                text_color_ = kAnsiColorCodesBright[esc_seq_n_ - 90];
+            }
+            return;
+        } else if (U'0' <= c && c <= U'9') {
+            esc_seq_n_ = esc_seq_n_ * 10 + (c - U'0');
+            return;
+        }
+        break;
+    }
+
+    esc_seq_state_ = EscSeqState::kInit;
+
     if (!show_window_) {
         return;
     }
@@ -616,13 +897,13 @@ void Terminal::Print(char32_t c) {
         if (cursor_.x == kColumns) {
             newline();
         }
-        WriteUnicode(*window_->Writer(), CalcCursorPos(), c, { 255, 255, 255 });
+        WriteUnicode(*window_->Writer(), CalcCursorPos(), c, text_color_);
         ++cursor_.x;
     } else {
         if (cursor_.x >= kColumns - 1) {
             newline();
         }
-        WriteUnicode(*window_->Writer(), CalcCursorPos(), c, { 255, 255, 255 });
+        WriteUnicode(*window_->Writer(), CalcCursorPos(), c, text_color_);
         cursor_.x += 2;
     }
 }
@@ -636,8 +917,13 @@ void Terminal::Print(const char* s, std::optional<size_t> len) {
 
     while (s[i] && i < len_) {
         const auto [u32, bytes] = ConvertUTF8To32(&s[i]);
-        Print(u32);
-        i += bytes;
+        if (bytes > 0) {
+            Print(u32);
+            i += bytes;
+        } else {  // UTF-8 文字ではない
+            Print('?');
+            i++;
+        }
     }
 
     DrawCursor(true);
