@@ -11,8 +11,7 @@ public:
     virtual size_t Size() const = 0;
     virtual bool IsTerminal() const { return false; }
 
-    /** @brief Load reads file content without changing internal offset
-   */
+    /** @brief Load reads file content without changing internal offset */
     virtual size_t Load(void* buf, size_t len, size_t offset) = 0;
 };
 

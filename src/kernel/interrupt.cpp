@@ -102,24 +102,26 @@ namespace {
         while (true) __asm__("hlt");                                                \
     }
 
+    // clang-format off
     FaultHandlerNoError(DE)
-        FaultHandlerNoError(DB)
-            FaultHandlerNoError(BP)
-                FaultHandlerNoError(OF)
-                    FaultHandlerNoError(BR)
-                        FaultHandlerNoError(UD)
-                            FaultHandlerNoError(NM)
-                                FaultHandlerWithError(DF)
-                                    FaultHandlerWithError(TS)
-                                        FaultHandlerWithError(NP)
-                                            FaultHandlerWithError(SS)
-                                                FaultHandlerWithError(GP)
-        // FaultHandlerWithError(PF)
-        FaultHandlerNoError(MF)
-            FaultHandlerWithError(AC)
-                FaultHandlerNoError(MC)
-                    FaultHandlerNoError(XM)
-                        FaultHandlerNoError(VE)
+    FaultHandlerNoError(DB)
+    FaultHandlerNoError(BP)
+    FaultHandlerNoError(OF)
+    FaultHandlerNoError(BR)
+    FaultHandlerNoError(UD)
+    FaultHandlerNoError(NM)
+    FaultHandlerWithError(DF)
+    FaultHandlerWithError(TS)
+    FaultHandlerWithError(NP)
+    FaultHandlerWithError(SS)
+    FaultHandlerWithError(GP)
+    // FaultHandlerWithError(PF)
+    FaultHandlerNoError(MF)
+    FaultHandlerWithError(AC)
+    FaultHandlerNoError(MC)
+    FaultHandlerNoError(XM)
+    FaultHandlerNoError(VE)
+    // clang-format on
 }  // namespace
 
 void InitializeInterrupt() {

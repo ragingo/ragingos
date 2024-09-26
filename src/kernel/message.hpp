@@ -6,6 +6,7 @@ enum class LayerOperation {
     Draw,
     DrawArea
 };
+
 struct Message {
     enum Type {
         kInterruptXHCI,
