@@ -288,8 +288,6 @@ EFI_STATUS EFIAPI UefiMain(
     EFI_SYSTEM_TABLE* system_table) {
     EFI_STATUS status;
 
-    Print(L"Hello, Mikan World!\n");
-
     CHAR8 memmap_buf[4096 * 4];
     struct MemoryMap memmap = { sizeof(memmap_buf), memmap_buf, 0, 0, 0, 0 };
     status = GetMemoryMap(&memmap);

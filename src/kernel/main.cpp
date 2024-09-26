@@ -189,7 +189,7 @@ extern "C" void KernelMainNewStack(
     InitializeGraphics(frame_buffer_config_ref);
     InitializeConsole();
 
-    printk("Welcome to MikanOS!\n");
+    printk("Welcome to ragingos!\n");
     SetLogLevel(kWarn);
 
     InitializeSegmentation();
