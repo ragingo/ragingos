@@ -184,7 +184,7 @@ void InitializeFont() {
         exit(1);
     }
 
-    auto [entry, pos_slash] = fat::FindFile("/font/nihongo.ttf");
+    auto [entry, pos_slash] = fat::FindFile("/res/font/nihongo.ttf");
     if (entry == nullptr || pos_slash) {
         Log(kWarn, "no nihongo.ttf\n");
         return;
