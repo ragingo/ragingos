@@ -1,7 +1,7 @@
 #!/bin/bash -eux
 
-export EDK2_HOME=$(realpath ./lib/edk2)
-export STD_LIB_DIR=$(realpath ./lib/osbook/devenv/x86_64-elf)
+export EDK2_HOME=$(realpath -m ./lib/edk2)
+export STD_LIB_DIR=$(realpath -m ./lib/osbook/devenv/x86_64-elf)
 export EFI_FILE_PATH=$EDK2_HOME/Build/RagingosLoaderX64/DEBUG_CLANG38/X64/Loader.efi
 
 if [ ! -d $EDK2_HOME ]; then
