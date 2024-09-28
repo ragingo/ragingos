@@ -5,6 +5,11 @@
 
 #include "console.hpp"
 
+// LLVM18 コンパイルエラー回避
+#define va_start(ap, param) __builtin_va_start(ap, param)
+#define va_end(ap) __builtin_va_end(ap)
+#define va_arg(ap, type) __builtin_va_arg(ap, type)
+
 namespace {
     LogLevel log_level = kWarn;
 }

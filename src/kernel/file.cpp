@@ -3,6 +3,11 @@
 #include <cstdio>
 #include <vector>
 
+// LLVM18 コンパイルエラー回避
+#define va_start(ap, param) __builtin_va_start(ap, param)
+#define va_end(ap) __builtin_va_end(ap)
+#define va_arg(ap, type) __builtin_va_arg(ap, type)
+
 size_t PrintToFD(FileDescriptor& fd, const char* format, ...) {
     constexpr int BUFFER_SIZE = 128;
     va_list ap;

@@ -7,9 +7,9 @@
       apt:
         name:
           - build-essential
-          - llvm-14-dev
-          - lld-14
-          - clang-14
+          - llvm-18-dev
+          - lld-18
+          - clang-18
           - nasm
           - acpica-tools
           - uuid-dev
@@ -19,6 +19,7 @@
           - unzip
           - ca-certificates
           - dosfstools
+          - clang-format
         state: latest
         install_recommends: no
 
@@ -33,12 +34,12 @@
       apt: name=qemu-system-gui state=latest install_recommends=no
       when: qemu_gui_result.rc == 0
 
-    - name: set llvm 14 as default
+    - name: set llvm 18 as default
       become: yes
       alternatives:
         name: "{{ item }}"
         link: "/usr/bin/{{ item }}"
-        path: "/usr/bin/{{ item }}-14"
+        path: "/usr/bin/{{ item }}-18"
       with_items:
         - llvm-PerfectShuffle
         - llvm-ar
