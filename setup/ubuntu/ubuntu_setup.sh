@@ -18,13 +18,3 @@ mkdir workspace
 pushd workspace
 git clone https://github.com/uchan-nos/mikanos.git
 popd
-
-# day02 あたりが終わったら差し替え
-pushd edk2
-ln -s $HOME/ragingos/src/RagingosLoaderPkg ./
-ls RagingosLoaderPkg/main.c
-source edksetup.sh
-vi Conf/target.txt
-build
-ls Build/RagingosLoaderX64/DEBUG_CLANG38/X64/Loader.efi
-popd
