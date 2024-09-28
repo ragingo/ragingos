@@ -11,8 +11,8 @@ if [ ! -d $EDK2_HOME ]; then
   mkdir -p $EDK2_HOME
   git clone --depth=1 https://github.com/tianocore/edk2.git $EDK2_HOME
   pushd $EDK2_HOME
-  git fetch --depth=1 origin 38c8be123aced4cc8ad5c7e0da9121a181b94251
-  git checkout 38c8be123aced4cc8ad5c7e0da9121a181b94251
+  git fetch --depth=1 --tags
+  git checkout tags/edk2-stable202208
   # BaseTools/Source/C のビルドを通すため、 BaseTools/Source/C/BrotliCompress/brotli を取得
   git submodule update --init --depth=1 BaseTools/Source/C/BrotliCompress/brotli
   make -C BaseTools/Source/C
