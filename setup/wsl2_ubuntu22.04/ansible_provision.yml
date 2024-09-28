@@ -1,0 +1,124 @@
+# https://github.com/uchan-nos/mikanos-build/commit/182902d66b1151ee8aacf34ff71d6b052d4cf363
+---
+- hosts: all
+  tasks:
+    - name: ensure development tools are at the latest version
+      become: yes
+      apt:
+        name:
+          - build-essential
+          - llvm-14-dev
+          - lld-14
+          - clang-14
+          - nasm
+          - acpica-tools
+          - uuid-dev
+          - qemu-system-x86
+          - qemu-utils
+          - xauth
+          - unzip
+          - python3-distutils
+          - ca-certificates
+        state: latest
+        install_recommends: no
+
+    - name: check whether qemu-system-gui exists
+      command: dpkg-query --show qemu-system-gui
+      failed_when: False
+      changed_when: False
+      register: qemu_gui_result
+
+    - name: install qemu gui package if exists
+      become: yes
+      apt: name=qemu-system-gui state=latest install_recommends=no
+      when: qemu_gui_result.rc == 0
+
+    - name: set llvm 14 as default
+      become: yes
+      alternatives:
+        name: "{{ item }}"
+        link: "/usr/bin/{{ item }}"
+        path: "/usr/bin/{{ item }}-14"
+      with_items:
+        - llvm-PerfectShuffle
+        - llvm-ar
+        - llvm-as
+        - llvm-bcanalyzer
+        - llvm-cat
+        - llvm-cfi-verify
+        - llvm-config
+        - llvm-cov
+        - llvm-c-test
+        - llvm-cvtres
+        - llvm-cxxdump
+        - llvm-cxxfilt
+        - llvm-diff
+        - llvm-dis
+        - llvm-dlltool
+        - llvm-dwarfdump
+        - llvm-dwp
+        - llvm-exegesis
+        - llvm-extract
+        - llvm-lib
+        - llvm-link
+        - llvm-lto
+        - llvm-lto2
+        - llvm-mc
+        - llvm-mca
+        - llvm-modextract
+        - llvm-mt
+        - llvm-nm
+        - llvm-objcopy
+        - llvm-objdump
+        - llvm-opt-report
+        - llvm-pdbutil
+        - llvm-profdata
+        - llvm-ranlib
+        - llvm-rc
+        - llvm-readelf
+        - llvm-readobj
+        - llvm-rtdyld
+        - llvm-size
+        - llvm-split
+        - llvm-stress
+        - llvm-strings
+        - llvm-strip
+        - llvm-symbolizer
+        - llvm-tblgen
+        - llvm-undname
+        - llvm-xray
+        - ld.lld
+        - lld-link
+        - clang
+        - clang++
+        - clang-cpp
+
+    - name: clone EDK II repository
+      git:
+        repo: "https://github.com/tianocore/edk2.git"
+        dest: "{{ ansible_env.HOME }}/edk2"
+        version: "edk2-stable202208"
+
+    - name: build EDK II base tools
+      make:
+        chdir: "{{ ansible_env.HOME }}/edk2/BaseTools/Source/C"
+
+    - name: download standard libraries
+      unarchive:
+        src: "https://github.com/uchan-nos/mikanos-build/releases/download/v2.0/x86_64-elf.tar.gz"
+        dest: "{{ ansible_env.HOME }}/osbook/devenv"
+        remote_src: yes
+
+    - name: configure display variable if WSL1
+      lineinfile:
+        path: "{{ ansible_env.HOME }}/.profile"
+        regexp: "^export DISPLAY="
+        line: "export DISPLAY=:0"
+      when: "'DISPLAY' not in ansible_env and 'WSLENV' in ansible_env and 'WSL_INTEROP' not in ansible_env"
+
+    - name: configure display variable if WSL2
+      lineinfile:
+        path: "{{ ansible_env.HOME }}/.profile"
+        regexp: "^export DISPLAY="
+        line: "export DISPLAY=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null):0"
+      when: "'DISPLAY' not in ansible_env and 'WSL_INTEROP' in ansible_env"
