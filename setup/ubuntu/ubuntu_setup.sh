@@ -11,7 +11,6 @@ pushd osbook/devenv
 ansible-playbook -K -i ansible_inventory ansible_provision.yml
 popd
 iasl -v
-ls ~/edk2
 source ~/.profile
 
 mkdir workspace
