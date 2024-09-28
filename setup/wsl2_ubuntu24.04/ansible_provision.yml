@@ -17,8 +17,8 @@
           - qemu-utils
           - xauth
           - unzip
-          - python3-distutils
           - ca-certificates
+          - dosfstools
         state: latest
         install_recommends: no
 
