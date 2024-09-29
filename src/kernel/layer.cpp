@@ -4,6 +4,7 @@
 #include "console.hpp"
 #include "logger.hpp"
 #include "task.hpp"
+#include "irqflags.hpp"
 
 namespace {
     template<class T, class U>
@@ -320,12 +321,12 @@ Error CloseLayer(unsigned int layer_id) {
     const auto pos = layer->GetPosition();
     const auto size = layer->GetWindow()->Size();
 
-    __asm__("cli");
+    native_irq_disable();
     active_layer->Activate(0);
     layer_manager->RemoveLayer(layer_id);
     layer_manager->Draw({ pos, size });
     layer_task_map->erase(layer_id);
-    __asm__("sti");
+    native_irq_enable();
 
     return MAKE_ERROR(Error::kSuccess);
 }

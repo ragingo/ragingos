@@ -15,6 +15,7 @@
 #include "timer.hpp"
 #include "keyboard.hpp"
 #include "app_event.hpp"
+#include "irqflags.hpp"
 
 namespace syscall {
     struct Result {
@@ -48,9 +49,9 @@ namespace syscall {
             return { 0, E2BIG };
         }
 
-        __asm__("cli");
+        native_irq_disable();
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
 
         if (fd < 0 || task.Files().size() <= fd || !task.Files()[fd]) {
             return { 0, EBADF };
@@ -59,9 +60,9 @@ namespace syscall {
     }
 
     SYSCALL(Exit) {
-        __asm__("cli");
+        native_irq_disable();
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
         return { task.OSStackPointer(), static_cast<int>(arg1) };
     }
 
@@ -71,7 +72,7 @@ namespace syscall {
         const auto win = std::make_shared<ToplevelWindow>(
             w, h, screen_config.pixel_format, title);
 
-        __asm__("cli");
+        native_irq_disable();
         const auto layer_id = layer_manager->NewLayer()
                                   .SetWindow(win)
                                   .SetDraggable(true)
@@ -81,7 +82,7 @@ namespace syscall {
 
         const auto task_id = task_manager->CurrentTask().ID();
         layer_task_map->insert(std::make_pair(layer_id, task_id));
-        __asm__("sti");
+        native_irq_enable();
 
         return { layer_id, 0 };
     }
@@ -92,9 +93,9 @@ namespace syscall {
             const uint32_t layer_flags = layer_id_flags >> 32;
             const unsigned int layer_id = layer_id_flags & 0xffffffff;
 
-            __asm__("cli");
+            native_irq_disable();
             auto layer = layer_manager->FindLayer(layer_id);
-            __asm__("sti");
+            native_irq_enable();
             if (layer == nullptr) {
                 return { 0, EBADF };
             }
@@ -105,9 +106,9 @@ namespace syscall {
             }
 
             if ((layer_flags & 1) == 0) {
-                __asm__("cli");
+                native_irq_disable();
                 layer_manager->Draw(layer_id);
-                __asm__("sti");
+                native_irq_enable();
             }
 
             return res;
@@ -151,7 +152,8 @@ namespace syscall {
             [](Window& win,
                int x0, int y0, int x1, int y1, uint32_t color) {
                 auto sign = [](int x) {
-                    return (x > 0) ? 1 : (x < 0) ? -1 : 0;
+                    return (x > 0) ? 1 : (x < 0) ? -1
+                                                 : 0;
                 };
                 const int dx = x1 - x0 + sign(x1 - x0);
                 const int dy = y1 - y0 + sign(y1 - y0);
@@ -208,19 +210,19 @@ namespace syscall {
         const auto app_events = reinterpret_cast<AppEvent*>(arg1);
         const size_t len = arg2;
 
-        __asm__("cli");
+        native_irq_disable();
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
         size_t i = 0;
 
         while (i < len) {
-            __asm__("cli");
+            native_irq_disable();
             auto msg = task.ReceiveMessage();
             if (!msg && i == 0) {
                 task.Sleep();
                 continue;
             }
-            __asm__("sti");
+            native_irq_enable();
 
             if (!msg) {
                 break;
@@ -285,18 +287,18 @@ namespace syscall {
             return { 0, EINVAL };
         }
 
-        __asm__("cli");
+        native_irq_disable();
         const uint64_t task_id = task_manager->CurrentTask().ID();
-        __asm__("sti");
+        native_irq_enable();
 
         unsigned long timeout = arg3 * kTimerFreq / 1000;
         if (mode & 1) {  // relative
             timeout += timer_manager->CurrentTick();
         }
 
-        __asm__("cli");
+        native_irq_disable();
         timer_manager->AddTimer(Timer { timeout, -timer_value, task_id });
-        __asm__("sti");
+        native_irq_enable();
         return { timeout * 1000 / kTimerFreq, 0 };
     }
 
@@ -330,9 +332,9 @@ namespace syscall {
     SYSCALL(OpenFile) {
         const char* path = reinterpret_cast<const char*>(arg1);
         const int flags = arg2;
-        __asm__("cli");
+        native_irq_disable();
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
 
         if (strcmp(path, "@stdin") == 0) {
             return { 0, 0 };
@@ -361,9 +363,9 @@ namespace syscall {
         const int fd = arg1;
         void* buf = reinterpret_cast<void*>(arg2);
         size_t count = arg3;
-        __asm__("cli");
+        native_irq_disable();
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
 
         if (fd < 0 || task.Files().size() <= fd || !task.Files()[fd]) {
             return { 0, EBADF };
@@ -374,9 +376,9 @@ namespace syscall {
     SYSCALL(DemandPages) {
         const size_t num_pages = arg1;
         // const int flags = arg2;
-        __asm__("cli");
+        native_irq_disable();
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
 
         const uint64_t dp_end = task.DPagingEnd();
         task.SetDPagingEnd(dp_end + 4096 * num_pages);
@@ -387,9 +389,9 @@ namespace syscall {
         const int fd = arg1;
         size_t* file_size = reinterpret_cast<size_t*>(arg2);
         // const int flags = arg3;
-        __asm__("cli");
+        native_irq_disable();
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
 
         if (fd < 0 || task.Files().size() <= fd || !task.Files()[fd]) {
             return { 0, EBADF };
@@ -405,9 +407,9 @@ namespace syscall {
 
     SYSCALL(IsTerminal) {
         const int fd = arg1;
-        __asm__("cli");
+        native_irq_disable();
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
 
         if (fd < 0 || task.Files().size() <= fd || !task.Files()[fd]) {
             return { 0, EBADF };

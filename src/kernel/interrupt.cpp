@@ -14,6 +14,7 @@
 #include "task.hpp"
 #include "graphics.hpp"
 #include "font.hpp"
+#include "irqflags.hpp"
 
 std::array<InterruptDescriptor, 256> idt;
 
@@ -70,7 +71,7 @@ namespace {
         }
 
         auto& task = task_manager->CurrentTask();
-        __asm__("sti");
+        native_irq_enable();
         ExitApp(task.OSStackPointer(), 128 + SIGSEGV);
     }
 

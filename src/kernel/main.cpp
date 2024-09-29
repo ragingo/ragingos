@@ -38,6 +38,7 @@
 #include "fat.hpp"
 #include "syscall.hpp"
 #include "uefi.hpp"
+#include "irqflags.hpp"
 
 __attribute__((format(printf, 1, 2))) int printk(const char* format, ...) {
     va_list ap;
@@ -56,7 +57,7 @@ alignas(16) uint8_t kernel_main_stack[1024 * 1024];
 
 // デスクトップの右下（タスクバーの右端）に現在時刻を表示する
 void TaskWallclock(uint64_t task_id, int64_t data) {
-    __asm__("cli");
+    native_irq_disable();
     Task& task = task_manager->CurrentTask();
     auto clock_window = std::make_shared<Window>(
         8 * 10, 16 * 2, screen_config.pixel_format);
@@ -66,7 +67,7 @@ void TaskWallclock(uint64_t task_id, int64_t data) {
                                            .Move(ScreenSize() - clock_window->Size() - Vector2D<int> { 4, 8 })
                                            .ID();
     layer_manager->UpDown(clock_window_layer_id, 2);
-    __asm__("sti");
+    native_irq_enable();
 
     auto draw_current_time = [&]() {
         EFI_TIME t;
@@ -85,9 +86,9 @@ void TaskWallclock(uint64_t task_id, int64_t data) {
         msg.arg.layer.layer_id = clock_window_layer_id;
         msg.arg.layer.op = LayerOperation::Draw;
 
-        __asm__("cli");
+        native_irq_disable();
         task_manager->SendMessage(1, msg);
-        __asm__("sti");
+        native_irq_enable();
     };
 
     draw_current_time();
@@ -95,14 +96,14 @@ void TaskWallclock(uint64_t task_id, int64_t data) {
         Timer { timer_manager->CurrentTick(), 1, task_id });
 
     while (true) {
-        __asm__("cli");
+        native_irq_disable();
         auto msg = task.ReceiveMessage();
         if (!msg) {
             task.Sleep();
-            __asm__("sti");
+            native_irq_enable();
             continue;
         }
-        __asm__("sti");
+        native_irq_enable();
 
         if (msg->type == Message::kTimerTimeout) {
             draw_current_time();
@@ -164,15 +165,15 @@ extern "C" void KernelMainNewStack(
     char str[128];
 
     while (true) {
-        __asm__("cli");
+        native_irq_disable();
         auto msg = main_task.ReceiveMessage();
         if (!msg) {
             main_task.Sleep();
-            __asm__("sti");
+            native_irq_enable();
             continue;
         }
 
-        __asm__("sti");
+        native_irq_enable();
 
         switch (msg->type) {
         case Message::kInterruptXHCI:
@@ -187,13 +188,13 @@ extern "C" void KernelMainNewStack(
                     .Wakeup();
             } else {
                 auto act = active_layer->GetActive();
-                __asm__("cli");
+                native_irq_disable();
                 auto task_it = layer_task_map->find(act);
-                __asm__("sti");
+                native_irq_enable();
                 if (task_it != layer_task_map->end()) {
-                    __asm__("cli");
+                    native_irq_disable();
                     task_manager->SendMessage(task_it->second, *msg);
-                    __asm__("sti");
+                    native_irq_enable();
                 } else {
                     printk("key push not handled: keycode %02x, ascii %02x\n",
                            msg->arg.keyboard.keycode,
@@ -203,9 +204,9 @@ extern "C" void KernelMainNewStack(
             break;
         case Message::kLayer:
             ProcessLayerMessage(*msg);
-            __asm__("cli");
+            native_irq_disable();
             task_manager->SendMessage(msg->src_task, Message { Message::kLayerFinish });
-            __asm__("sti");
+            native_irq_enable();
             break;
         default:
             Log(kError, "Unknown message type: %d\n", msg->type);

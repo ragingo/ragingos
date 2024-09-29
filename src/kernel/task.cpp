@@ -3,6 +3,7 @@
 #include "asmfunc.h"
 #include "segment.hpp"
 #include "timer.hpp"
+#include "irqflags.hpp"
 
 namespace {
     template<class T, class U>
@@ -303,10 +304,10 @@ TaskManager* task_manager;
 void InitializeTask() {
     task_manager = new TaskManager;
 
-    __asm__("cli");
+    native_irq_disable();
     timer_manager->AddTimer(
         Timer { timer_manager->CurrentTick() + kTaskTimerPeriod, kTaskTimerValue, 1 });
-    __asm__("sti");
+    native_irq_enable();
 }
 
 __attribute__((no_caller_saved_registers)) extern "C" uint64_t GetCurrentTaskOSStackPointer() {

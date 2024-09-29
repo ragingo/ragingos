@@ -19,6 +19,7 @@
 #include "uefi.hpp"
 #include "usb/classdriver/cdc.hpp"
 #include "usb/xhci/xhci.hpp"
+#include "irqflags.hpp"
 
 namespace {
 
@@ -748,10 +749,10 @@ void Terminal::ExecuteLine() {
 
     if (pipe_fd) {
         pipe_fd->FinishWrite();
-        __asm__("cli");
+        native_irq_disable();
         auto [ec, err] = task_manager->WaitFinish(subtask_id);
         (*layer_task_map)[layer_id_] = task_.ID();
-        __asm__("sti");
+        native_irq_enable();
         if (err) {
             Log(kWarn, "failed to wait finish: %s\n", err.Name());
         }
@@ -764,9 +765,9 @@ void Terminal::ExecuteLine() {
 
 WithError<int> Terminal::ExecuteFile(fat::DirectoryEntry& file_entry,
                                      char* command, char* first_arg) {
-    __asm__("cli");
+    native_irq_disable();
     auto& task = task_manager->CurrentTask();
-    __asm__("sti");
+    native_irq_enable();
 
     auto [app_load, err] = LoadApp(file_entry, task);
     if (err) {
@@ -937,9 +938,9 @@ void Terminal::Print(const char* s, std::optional<size_t> len) {
 
     Message msg = MakeLayerMessage(
         task_.ID(), LayerID(), LayerOperation::DrawArea, draw_area);
-    __asm__("cli");
+    native_irq_disable();
     task_manager->SendMessage(1, msg);
-    __asm__("sti");
+    native_irq_enable();
 }
 
 void Terminal::Redraw() {
@@ -948,9 +949,9 @@ void Terminal::Redraw() {
 
     Message msg = MakeLayerMessage(
         task_.ID(), LayerID(), LayerOperation::DrawArea, draw_area);
-    __asm__("cli");
+    native_irq_disable();
     task_manager->SendMessage(1, msg);
-    __asm__("sti");
+    native_irq_enable();
 }
 
 Rectangle<int> Terminal::HistoryUpDown(int direction) {
@@ -986,7 +987,7 @@ void TaskTerminal(uint64_t task_id, int64_t data) {
         show_window = term_desc->show_window;
     }
 
-    __asm__("cli");
+    native_irq_disable();
     Task& task = task_manager->CurrentTask();
     Terminal* terminal = new Terminal { task, term_desc };
     if (show_window) {
@@ -994,7 +995,7 @@ void TaskTerminal(uint64_t task_id, int64_t data) {
         layer_task_map->insert(std::make_pair(terminal->LayerID(), task_id));
         active_layer->Activate(terminal->LayerID());
     }
-    __asm__("sti");
+    native_irq_enable();
 
     if (term_desc && !term_desc->command_line.empty()) {
         for (int i = 0; i < term_desc->command_line.length(); ++i) {
@@ -1005,7 +1006,7 @@ void TaskTerminal(uint64_t task_id, int64_t data) {
 
     if (term_desc && term_desc->exit_after_command) {
         delete term_desc;
-        __asm__("cli");
+        native_irq_disable();
         task_manager->Finish(terminal->LastExitCode());
     }
 
@@ -1018,14 +1019,14 @@ void TaskTerminal(uint64_t task_id, int64_t data) {
     bool window_isactive = false;
 
     while (true) {
-        __asm__("cli");
+        native_irq_disable();
         auto msg = task.ReceiveMessage();
         if (!msg) {
             task.Sleep();
-            __asm__("sti");
+            native_irq_enable();
             continue;
         }
-        __asm__("sti");
+        native_irq_enable();
 
         switch (msg->type) {
         case Message::kTimerTimeout:
@@ -1034,9 +1035,9 @@ void TaskTerminal(uint64_t task_id, int64_t data) {
                 const auto area = terminal->BlinkCursor();
                 Message msg = MakeLayerMessage(
                     task_id, terminal->LayerID(), LayerOperation::DrawArea, area);
-                __asm__("cli");
+                native_irq_disable();
                 task_manager->SendMessage(1, msg);
-                __asm__("sti");
+                native_irq_enable();
             }
             break;
         case Message::kKeyPush:
@@ -1047,9 +1048,9 @@ void TaskTerminal(uint64_t task_id, int64_t data) {
                 if (show_window) {
                     Message msg = MakeLayerMessage(
                         task_id, terminal->LayerID(), LayerOperation::DrawArea, area);
-                    __asm__("cli");
+                    native_irq_disable();
                     task_manager->SendMessage(1, msg);
-                    __asm__("sti");
+                    native_irq_enable();
                 }
             }
             break;
@@ -1058,7 +1059,7 @@ void TaskTerminal(uint64_t task_id, int64_t data) {
             break;
         case Message::kWindowClose:
             CloseLayer(msg->arg.window_close.layer_id);
-            __asm__("cli");
+            native_irq_disable();
             task_manager->Finish(terminal->LastExitCode());
             break;
         default:
@@ -1075,13 +1076,13 @@ size_t TerminalFileDescriptor::Read(void* buf, size_t len) {
     char* bufc = reinterpret_cast<char*>(buf);
 
     while (true) {
-        __asm__("cli");
+        native_irq_disable();
         auto msg = term_.UnderlyingTask().ReceiveMessage();
         if (!msg) {
             term_.UnderlyingTask().Sleep();
             continue;
         }
-        __asm__("sti");
+        native_irq_enable();
 
         if (msg->type != Message::kKeyPush || !msg->arg.keyboard.press) {
             continue;
@@ -1131,13 +1132,13 @@ size_t PipeDescriptor::Read(void* buf, size_t len) {
     }
 
     while (true) {
-        __asm__("cli");
+        native_irq_disable();
         auto msg = task_.ReceiveMessage();
         if (!msg) {
             task_.Sleep();
             continue;
         }
-        __asm__("sti");
+        native_irq_enable();
 
         if (msg->type != Message::kPipe) {
             continue;
@@ -1164,9 +1165,9 @@ size_t PipeDescriptor::Write(const void* buf, size_t len) {
         msg.arg.pipe.len = std::min(len - sent_bytes, sizeof(msg.arg.pipe.data));
         memcpy(msg.arg.pipe.data, &bufc[sent_bytes], msg.arg.pipe.len);
         sent_bytes += msg.arg.pipe.len;
-        __asm__("cli");
+        native_irq_disable();
         task_.SendMessage(msg);
-        __asm__("sti");
+        native_irq_enable();
     }
     return len;
 }
@@ -1174,7 +1175,7 @@ size_t PipeDescriptor::Write(const void* buf, size_t len) {
 void PipeDescriptor::FinishWrite() {
     Message msg { Message::kPipe };
     msg.arg.pipe.len = 0;
-    __asm__("cli");
+    native_irq_disable();
     task_.SendMessage(msg);
-    __asm__("sti");
+    native_irq_enable();
 }
