@@ -17,8 +17,15 @@ CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone -fshor
             -fno-exceptions -fno-rtti -std=c++23
 LDFLAGS  += --entry KernelMain -z norelro --image-base 0x100000 --static
 
+BUILD_LOG_CC := $(TARGET_DIR)/build-report_$(CC).log
+BUILD_LOG_CXX := $(TARGET_DIR)/build-report_$(CXX).log
+BUILD_LOG_LD := $(TARGET_DIR)/build-report_$(LD).log
+
 .PHONY: all
 all: setup $(TARGET)
+	@grep -E "warning: |error: " $(BUILD_LOG_CC) || echo "$(CC) による警告やエラーは見つかりませんでした。"
+	@grep -E "warning: |error: " $(BUILD_LOG_CXX) || echo "$(CXX) による警告やエラーは見つかりませんでした。"
+	@grep -E "warning: |error: " $(BUILD_LOG_LD) || echo "$(LD) による警告やエラーは見つかりませんでした。"
 
 setup:
 	mkdir -p $(TARGET_DIR)/drivers
@@ -27,10 +34,10 @@ setup:
 	mkdir -p $(TARGET_DIR)/ui
 
 $(TARGET): $(OBJS) Makefile
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm  -lfreetype
+	$(LD) $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm -lfreetype 2>&1 | tee -a $(BUILD_LOG_LD)
 
 $(TARGET_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ 2>&1 | tee -a $(BUILD_LOG_CXX)
 
 $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@
@@ -38,7 +45,7 @@ $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.cpp
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 
 $(TARGET_DIR)/%.o: $(SRC_DIR)/%.c Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ 2>&1 | tee -a $(BUILD_LOG_CC)
 
 $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MM $< > $@
