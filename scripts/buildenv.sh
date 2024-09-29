@@ -30,6 +30,11 @@ if [ ! -d $STD_LIB_DIR ]; then
   echo "ダウンロードと展開が完了しました。"
 fi
 
+export CC=clang
+export CXX=clang++
+export LD=ld.lld
+export AS=nasm
+
 export CPPFLAGS="\
   -I$STD_LIB_DIR/include/c++/v1 -I$STD_LIB_DIR/include -I$STD_LIB_DIR/include/freetype2 \
   -I$EDK2_HOME/MdePkg/Include -I$EDK2_HOME/MdePkg/Include/X64 \

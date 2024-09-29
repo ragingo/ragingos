@@ -30,13 +30,13 @@ setup:
 	mkdir -p $(TARGET_DIR)
 
 $(TARGET): $(OBJS) Makefile
-	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm
+	$(LD) $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm
 
 $(TARGET_DIR)/%.o: %.c Makefile
-	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(TARGET_DIR)/%.o: %.cpp Makefile
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(TARGET_DIR)/%.o: %.asm Makefile
 	nasm -f elf64 -o $@ $<
@@ -44,10 +44,10 @@ $(TARGET_DIR)/%.o: %.asm Makefile
 # common
 
 $(TARGET_DIR)/%.o: $(SRC_COMMON_DIR)/%.c Makefile
-	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(TARGET_DIR)/%.o: $(SRC_COMMON_DIR)/%.cpp Makefile
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(TARGET_DIR)/%.o: $(SRC_COMMON_DIR)/%.asm Makefile
 	nasm -f elf64 $< -o $@

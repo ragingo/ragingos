@@ -27,26 +27,26 @@ setup:
 	mkdir -p $(TARGET_DIR)/ui
 
 $(TARGET): $(OBJS) Makefile
-	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm  -lfreetype
+	$(LD) $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm  -lfreetype
 
 $(TARGET_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.cpp
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@
 	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRC_DIR)/%.cpp,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 
 $(TARGET_DIR)/%.o: $(SRC_DIR)/%.c Makefile
-	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.c
-	clang $(CPPFLAGS) $(CFLAGS) -MM $< > $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MM $< > $@
 	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRC_DIR)/%.c,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 
 $(TARGET_DIR)/%.o: $(SRC_DIR)/%.asm Makefile
-	nasm -f elf64 -o $@ $<
+	$(AS) -f elf64 -o $@ $<
 
 HANKAKU_BIN = $(TARGET_DIR)/hankaku.bin
 HANKAKU_O = $(TARGET_DIR)/hankaku.o
