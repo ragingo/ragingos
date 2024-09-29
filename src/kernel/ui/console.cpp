@@ -4,11 +4,11 @@
  * コンソール描画のプログラムを集めたファイル．
  */
 
-#include "console.hpp"
+#include "ui/console.hpp"
 
 #include <cstring>
 #include "font.hpp"
-#include "layer.hpp"
+#include "ui/layer.hpp"
 
 Console::Console(const PixelColor& fg_color, const PixelColor& bg_color)
     : writer_ { nullptr }

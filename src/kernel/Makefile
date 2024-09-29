@@ -22,8 +22,9 @@ all: setup $(TARGET)
 
 setup:
 	mkdir -p $(TARGET_DIR)/drivers
-	mkdir -p $(TARGET_DIR)/drivers/usb/xhci
 	mkdir -p $(TARGET_DIR)/drivers/usb/classdriver
+	mkdir -p $(TARGET_DIR)/drivers/usb/xhci
+	mkdir -p $(TARGET_DIR)/ui
 
 $(TARGET): $(OBJS) Makefile
 	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm  -lfreetype

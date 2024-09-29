@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "frame_buffer_config.hpp"
-#include "graphics.hpp"
+#include "ui/graphics.hpp"
 #include "error.hpp"
 
 class FrameBuffer {

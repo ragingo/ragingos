@@ -9,7 +9,7 @@
 #include <vector>
 #include <optional>
 #include <string>
-#include "graphics.hpp"
+#include "ui/graphics.hpp"
 #include "frame_buffer.hpp"
 
 enum class WindowRegion {

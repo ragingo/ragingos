@@ -1,7 +1,7 @@
-#include "layer.hpp"
+#include "ui/layer.hpp"
 
 #include <algorithm>
-#include "console.hpp"
+#include "ui/console.hpp"
 #include "logger.hpp"
 #include "task.hpp"
 #include "irqflags.hpp"

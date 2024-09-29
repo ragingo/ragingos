@@ -2,8 +2,8 @@
 
 #include <limits>
 #include <memory>
-#include "graphics.hpp"
-#include "layer.hpp"
+#include "ui/graphics.hpp"
+#include "ui/layer.hpp"
 #include "drivers/usb/classdriver/mouse.hpp"
 #include "task.hpp"
 

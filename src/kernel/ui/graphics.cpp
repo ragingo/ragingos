@@ -4,7 +4,7 @@
  * 画像描画関連のプログラムを集めたファイル．
  */
 
-#include "graphics.hpp"
+#include "ui/graphics.hpp"
 
 void RGBResv8BitPerColorPixelWriter::Write(Vector2D<int> pos, const PixelColor& c) {
     auto p = PixelAt(pos);

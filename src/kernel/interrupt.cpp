@@ -12,7 +12,7 @@
 #include "segment.hpp"
 #include "timer.hpp"
 #include "task.hpp"
-#include "graphics.hpp"
+#include "ui/graphics.hpp"
 #include "font.hpp"
 #include "irqflags.hpp"
 

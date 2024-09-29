@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdio>
 
-#include "console.hpp"
+#include "ui/console.hpp"
 
 // LLVM18 コンパイルエラー回避
 #define va_start(ap, param) __builtin_va_start(ap, param)
