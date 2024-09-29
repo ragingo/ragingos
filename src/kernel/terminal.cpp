@@ -17,8 +17,8 @@
 #include "keyboard.hpp"
 #include "logger.hpp"
 #include "uefi.hpp"
-#include "usb/classdriver/cdc.hpp"
-#include "usb/xhci/xhci.hpp"
+#include "drivers/usb/classdriver/cdc.hpp"
+#include "drivers/usb/xhci/xhci.hpp"
 #include "irqflags.hpp"
 
 namespace {

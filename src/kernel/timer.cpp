@@ -1,6 +1,6 @@
 #include "timer.hpp"
 
-#include "acpi.hpp"
+#include "drivers/acpi.hpp"
 #include "interrupt.hpp"
 #include "task.hpp"
 

@@ -4,7 +4,7 @@
 #include <memory>
 #include "graphics.hpp"
 #include "layer.hpp"
-#include "usb/classdriver/mouse.hpp"
+#include "drivers/usb/classdriver/mouse.hpp"
 #include "task.hpp"
 
 namespace {

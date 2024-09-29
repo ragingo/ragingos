@@ -1,7 +1,7 @@
 #include "keyboard.hpp"
 
 #include <memory>
-#include "usb/classdriver/keyboard.hpp"
+#include "drivers/usb/classdriver/keyboard.hpp"
 #include "task.hpp"
 
 namespace {

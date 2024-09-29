@@ -21,8 +21,9 @@ LDFLAGS  += --entry KernelMain -z norelro --image-base 0x100000 --static
 all: setup $(TARGET)
 
 setup:
-	mkdir -p $(TARGET_DIR)/usb/xhci
-	mkdir -p $(TARGET_DIR)/usb/classdriver
+	mkdir -p $(TARGET_DIR)/drivers
+	mkdir -p $(TARGET_DIR)/drivers/usb/xhci
+	mkdir -p $(TARGET_DIR)/drivers/usb/classdriver
 
 $(TARGET): $(OBJS) Makefile
 	ld.lld $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm  -lfreetype
