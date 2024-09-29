@@ -22,4 +22,5 @@ qemu-system-x86_64 \
   -device nec-usb-xhci,id=xhci \
   -device usb-mouse \
   -device usb-kbd \
+  -device usb-tablet \
   -monitor stdio
