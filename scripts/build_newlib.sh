@@ -6,10 +6,7 @@ NEWLIB_TAG=newlib-$NEWLIB_VERSION
 CC=clang
 CXX=clang++
 TARGET_TRIPLE=x86_64-elf
-
 CFLAGS="-nostdlibinc -O2 -D__ELF__ -D_LDBL_EQ_DBL -U_GNU_SOURCE -D_POSIX_TIMERS -fPIC -U__XSI_VISIBLE"
-
-NEWLIB_DIR=./lib/newlib
 
 pushd ./lib
 rm -rf ./newlib
