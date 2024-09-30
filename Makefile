@@ -18,6 +18,10 @@ clean_apps:
 .PHONY: rebuild
 rebuild: clean all
 
+.PHONY: build_stdlib
+build_stdlib:
+	./scripts/build_newlib.sh
+
 .PHONY: build_edk2
 build_edk2:
 	./scripts/build_edk2.sh
