@@ -20,6 +20,7 @@
           - ca-certificates
           - dosfstools
           - clang-format
+          - cmake
         state: latest
         install_recommends: no
 
