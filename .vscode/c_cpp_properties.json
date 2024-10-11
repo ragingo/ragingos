@@ -5,7 +5,11 @@
             "includePath": [
                 "${workspaceFolder}/src/**",
                 "./lib/edk2/MdePkg/**",
-                "./lib/osbook/devenv/x86_64-elf/include/**"
+                "./lib/osbook/devenv/x86_64-elf/include/**",
+                "./lib/llvm/libcxxabi/include/**",
+                "./lib/llvm/libcxx/include/**",
+                "./lib/newlib_build/x86_64-elf/include/**",
+                "./lib/llvm_libcxxabi_build/include/**"
             ],
             "defines": [],
             "cStandard": "c17",

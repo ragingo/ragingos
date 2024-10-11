@@ -1,4 +1,4 @@
-# https://github.com/uchan-nos/mikanos-build/commit/182902d66b1151ee8aacf34ff71d6b052d4cf363
+# https://github.com/uchan-nos/mikanos-build/commit/192902d66b1151ee8aacf34ff71d6b052d4cf363
 ---
 - hosts: all
   tasks:
@@ -7,9 +7,9 @@
       apt:
         name:
           - build-essential
-          - llvm-18-dev
-          - lld-18
-          - clang-18
+          - llvm-19-dev
+          - lld-19
+          - clang-19
           - nasm
           - acpica-tools
           - uuid-dev
@@ -21,6 +21,8 @@
           - dosfstools
           - clang-format
           - cmake
+          - ninja-build
+          - gnupg
         state: latest
         install_recommends: no
 
@@ -35,12 +37,12 @@
       apt: name=qemu-system-gui state=latest install_recommends=no
       when: qemu_gui_result.rc == 0
 
-    - name: set llvm 18 as default
+    - name: set llvm 19 as default
       become: yes
       alternatives:
         name: "{{ item }}"
         link: "/usr/bin/{{ item }}"
-        path: "/usr/bin/{{ item }}-18"
+        path: "/usr/bin/{{ item }}-19"
       with_items:
         - llvm-PerfectShuffle
         - llvm-ar

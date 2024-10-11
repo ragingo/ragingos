@@ -5,9 +5,9 @@ repos:
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
-        exclude: lib/
+        exclude: (?x)(lib/|.+\.patch$)
       - id: end-of-file-fixer
-        exclude: lib/
+        exclude: (?x)(lib/|.+\.patch$)
   - repo: local
     hooks:
       - id: formatter

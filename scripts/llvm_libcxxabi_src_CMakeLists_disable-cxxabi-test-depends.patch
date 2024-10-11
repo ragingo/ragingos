@@ -1,0 +1,13 @@
+diff --git a/libcxxabi/src/CMakeLists.txt b/libcxxabi/src/CMakeLists.txt
+index c1a7bcb14..f257463c1 100644
+--- a/libcxxabi/src/CMakeLists.txt
++++ b/libcxxabi/src/CMakeLists.txt
+@@ -306,7 +306,7 @@ endif()
+ 
+ # Add a meta-target for both libraries.
+ add_custom_target(cxxabi DEPENDS ${LIBCXXABI_BUILD_TARGETS})
+-add_dependencies(cxxabi-test-depends cxxabi cxx)
++# add_dependencies(cxxabi-test-depends cxxabi cxx)
+ 
+ if (LIBCXXABI_INSTALL_LIBRARY)
+   install(TARGETS ${LIBCXXABI_INSTALL_TARGETS}
