@@ -31,18 +31,6 @@ if [ $BUILD_MODE == "CLONE_AND_BUILD" ]; then
   mkdir llvm_libcxx_build
 fi
 
-#====================
-# libcxxabi build
-#====================
-pushd llvm_libcxxabi_build
-mkdir -p include
-
-if [ $BUILD_MODE == "CLEAN_BUILD" ]; then
-  rm cmake_install.cmake || true
-  rm CMakeCache.txt || true
-  rm ./lib/libc++abi.a || true
-fi
-
 CXX_FLAGS="\
   -nostdlibinc \
   -O2 \
@@ -55,11 +43,24 @@ CXX_FLAGS="\
   -D_POSIX_TIMERS \
   -DDISABLE_THREADS \
 "
+
+#====================
+# libcxxabi build
+#====================
+pushd llvm_libcxxabi_build
+mkdir -p include
+
+if [ $BUILD_MODE == "CLEAN_BUILD" ]; then
+  rm cmake_install.cmake || true
+  rm CMakeCache.txt || true
+  rm ./lib/libc++abi.a || true
+fi
+
 CXX_INCLUDES="\
+  -I$(realpath ../llvm/libcxx/include/c++/v1) \
   -I$(realpath ../llvm/libcxx/include) \
-  -I$(realpath ../llvm/llvm/include) \
-  -I$NEWLIB_INCLUDES \
   -I/usr/include/c++/v1 \
+  -I$NEWLIB_INCLUDES \
   -I/usr/include \
 "
 
@@ -91,33 +92,52 @@ popd
 #====================
 # libcxx build
 #====================
-# pushd llvm_libcxx_build
+pushd llvm_libcxx_build
 
-# cmake -G "Unix Makefiles" \
-#   -DCMAKE_INSTALL_PREFIX=$(pwd) \
-#   -DCMAKE_CXX_COMPILER=$CXX \
-#   -DCMAKE_CXX_FLAGS="-I$(pwd)/include $CFLAGS" \
-#   -DCMAKE_CXX_COMPILER_TARGET=$TARGET_TRIPLE \
-#   -DCMAKE_C_COMPILER=$CC \
-#   -DCMAKE_C_FLAGS="-I$(pwd)/include $CFLAGS" \
-#   -DCMAKE_C_COMPILER_TARGET=$TARGET_TRIPLE \
-#   -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
-#   -DCMAKE_BUILD_TYPE=Release \
-#   -DLIBCXX_CXX_ABI=libcxxabi \
-#   -DLIBCXX_CXX_ABI_INCLUDE_PATHS="$(realpath ../llvm/libcxxabi/include)" \
-#   -DLIBCXX_CXX_ABI_LIBRARY_PATH="$(realpath ../llvm/libcxxabi/lib)" \
-#   -DLIBCXX_ENABLE_EXCEPTIONS=False \
-#   -DLIBCXX_ENABLE_FILESYSTEM=False \
-#   -DLIBCXX_ENABLE_MONOTONIC_CLOCK=False \
-#   -DLIBCXX_ENABLE_RTTI=False \
-#   -DLIBCXX_ENABLE_THREADS=False \
-#   -DLIBCXX_ENABLE_SHARED=False \
-#   -DLIBCXX_ENABLE_STATIC=True \
-#   ../llvm/libcxx
+if [ $BUILD_MODE == "CLEAN_BUILD" ]; then
+  rm cmake_install.cmake || true
+  rm CMakeCache.txt || true
+  rm ./lib/libc++.a || true
+  rm ./lib/libc++experimental.a || true
+fi
 
-# make -j$(nproc)
-# make install
+CXX_ABI_DIR="$(realpath ../llvm_libcxxabi_build)"
 
-# popd
+CXX_INCLUDES="\
+  -I$CXX_ABI_DIR/include/c++/v1 \
+  -I$CXX_ABI_DIR/include \
+  -I$(realpath ./include/c++/v1) \
+  -I$(realpath ./include) \
+  -I$NEWLIB_INCLUDES \
+"
+
+cmake -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=$CC \
+  -DCMAKE_C_COMPILER_TARGET=$TARGET_TRIPLE \
+  -DCMAKE_C_FLAGS="$CXX_INCLUDES $CXX_FLAGS" \
+  -DCMAKE_CXX_COMPILER=$CXX \
+  -DCMAKE_CXX_FLAGS="$CXX_INCLUDES $CXX_FLAGS -Wno-c++11-narrowing" \
+  -DCMAKE_CXX_COMPILER_TARGET=$TARGET_TRIPLE \
+  -DCMAKE_LINKER=$LD \
+  -DCMAKE_STATIC_LINKER_FLAGS="$CXX_ABI_DIR/lib/libc++abi.a" \
+  -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+  -DLIBCXX_CXX_ABI=libcxxabi \
+  -DLIBCXX_ENABLE_EXCEPTIONS=False \
+  -DLIBCXX_ENABLE_FILESYSTEM=False \
+  -DLIBCXX_ENABLE_RTTI=False \
+  -DLIBCXX_ENABLE_SHARED=False \
+  -DLIBCXX_ENABLE_STATIC=True \
+  -DLIBCXX_ENABLE_THREADS=False \
+  -DLIBCXX_INCLUDE_BENCHMARKS=False \
+  -DLIBCXX_INCLUDE_TESTS=False \
+  -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
+  ../llvm/libcxx
+
+cmake --build . --target cxx_static -- -j$(nproc)
+
+(nm -u ./lib/libc++.a | grep -E "^ +U " | sort | uniq | grep __cxa) || true
+
+popd
 
 popd
