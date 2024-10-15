@@ -42,6 +42,7 @@ CXX_FLAGS="\
   -D_LIBCPP_HAS_NO_THREADS \
   -D_POSIX_TIMERS \
   -DDISABLE_THREADS \
+  -mcmodel=large \
 "
 
 #====================
@@ -73,7 +74,7 @@ cmake -G Ninja \
   -DCMAKE_C_FLAGS="$CXX_INCLUDES $CXX_FLAGS" \
   -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_CXX_COMPILER_TARGET=$TARGET_TRIPLE \
-  -DCMAKE_CXX_FLAGS="$CXX_INCLUDES $CXX_FLAGS" \
+  -DCMAKE_CXX_FLAGS="$CXX_INCLUDES $CXX_FLAGS -std=c++23" \
   -DCMAKE_LINKER=$LD \
   -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
   -DLIBCXXABI_ENABLE_EXCEPTIONS=False \
@@ -117,10 +118,9 @@ cmake -G Ninja \
   -DCMAKE_C_COMPILER_TARGET=$TARGET_TRIPLE \
   -DCMAKE_C_FLAGS="$CXX_INCLUDES $CXX_FLAGS" \
   -DCMAKE_CXX_COMPILER=$CXX \
-  -DCMAKE_CXX_FLAGS="$CXX_INCLUDES $CXX_FLAGS -Wno-c++11-narrowing" \
+  -DCMAKE_CXX_FLAGS="$CXX_INCLUDES $CXX_FLAGS -Wno-c++11-narrowing -std=c++23" \
   -DCMAKE_CXX_COMPILER_TARGET=$TARGET_TRIPLE \
   -DCMAKE_LINKER=$LD \
-  -DCMAKE_STATIC_LINKER_FLAGS="$CXX_ABI_DIR/lib/libc++abi.a" \
   -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
   -DLIBCXX_CXX_ABI=libcxxabi \
   -DLIBCXX_ENABLE_EXCEPTIONS=False \
@@ -135,8 +135,6 @@ cmake -G Ninja \
   ../llvm/libcxx
 
 cmake --build . --target cxx_static -- -j$(nproc)
-
-(nm -u ./lib/libc++.a | grep -E "^ +U " | sort | uniq | grep __cxa) || true
 
 popd
 

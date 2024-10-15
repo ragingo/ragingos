@@ -1,5 +1,5 @@
+#include <cstdlib>
 #include "segment.hpp"
-
 #include "asmfunc.h"
 #include "interrupt.hpp"
 #include "logger.hpp"

@@ -1,5 +1,6 @@
 #include <new>
 #include <cerrno>
+#include <cstdlib>
 
 int printk(const char* format, ...)
     __attribute__((format(printf, 1, 2)));

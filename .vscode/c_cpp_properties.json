@@ -5,11 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/src/**",
                 "./lib/edk2/MdePkg/**",
-                "./lib/newlib_build/x86_64-elf/include/**",
-                "./lib/llvm_libcxxabi_build/include/**",
-                "./lib/llvm_libcxx_build/include/**",
-                "./lib/llvm/libcxxabi/include/**",
-                "./lib/llvm/libcxx/include/**"
+                "./lib/llvm_libcxxabi_build/include/c++/v1",
+                "./lib/llvm_libcxx_build/include/c++/v1",
+                "./lib/newlib_build/x86_64-elf/include/**"
             ],
             "defines": [],
             "cStandard": "c17",

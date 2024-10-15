@@ -4,6 +4,7 @@
  * 画像描画関連のプログラムを集めたファイル．
  */
 
+#include <cstdlib>
 #include "ui/graphics.hpp"
 
 void RGBResv8BitPerColorPixelWriter::Write(Vector2D<int> pos, const PixelColor& c) {

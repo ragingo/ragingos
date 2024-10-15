@@ -1,6 +1,8 @@
 #include "memory_manager.hpp"
 
 #include <bitset>
+#include <cstdlib>
+#include <sys/types.h>
 #include "logger.hpp"
 
 BitmapMemoryManager::BitmapMemoryManager()

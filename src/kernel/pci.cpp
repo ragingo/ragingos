@@ -4,8 +4,8 @@
  * PCI バス制御のプログラムを集めたファイル．
  */
 
+#include <cstdlib>
 #include "pci.hpp"
-
 #include "asmfunc.h"
 #include "logger.hpp"
 
@@ -37,8 +37,8 @@ namespace {
     Error ScanBus(uint8_t bus);
 
     /** @brief 指定のファンクションを devices に追加する．
-   * もし PCI-PCI ブリッジなら，セカンダリバスに対し ScanBus を実行する
-   */
+     * もし PCI-PCI ブリッジなら，セカンダリバスに対し ScanBus を実行する
+     */
     Error ScanFunction(uint8_t bus, uint8_t device, uint8_t function) {
         auto class_code = ReadClassCode(bus, device, function);
         auto header_type = ReadHeaderType(bus, device, function);
@@ -58,8 +58,8 @@ namespace {
     }
 
     /** @brief 指定のデバイス番号の各ファンクションをスキャンする．
-   * 有効なファンクションを見つけたら ScanFunction を実行する．
-   */
+     * 有効なファンクションを見つけたら ScanFunction を実行する．
+     */
     Error ScanDevice(uint8_t bus, uint8_t device) {
         if (auto err = ScanFunction(bus, device, 0)) {
             return err;
@@ -80,8 +80,8 @@ namespace {
     }
 
     /** @brief 指定のバス番号の各デバイスをスキャンする．
-   * 有効なデバイスを見つけたら ScanDevice を実行する．
-   */
+     * 有効なデバイスを見つけたら ScanDevice を実行する．
+     */
     Error ScanBus(uint8_t bus) {
         for (uint8_t device = 0; device < 32; ++device) {
             if (ReadVendorId(bus, device, 0) == 0xffffu) {
@@ -95,10 +95,10 @@ namespace {
     }
 
     /** @brief 指定された MSI ケーパビリティ構造を読み取る
-   *
-   * @param dev  MSI ケーパビリティを読み込む PCI デバイス
-   * @param cap_addr  MSI ケーパビリティレジスタのコンフィグレーション空間アドレス
-   */
+     *
+     * @param dev  MSI ケーパビリティを読み込む PCI デバイス
+     * @param cap_addr  MSI ケーパビリティレジスタのコンフィグレーション空間アドレス
+     */
     MSICapability ReadMSICapability(const Device& dev, uint8_t cap_addr) {
         MSICapability msi_cap {};
 
@@ -122,11 +122,11 @@ namespace {
     }
 
     /** @brief 指定された MSI ケーパビリティ構造に書き込む
-   *
-   * @param dev  MSI ケーパビリティを読み込む PCI デバイス
-   * @param cap_addr  MSI ケーパビリティレジスタのコンフィグレーション空間アドレス
-   * @param msi_cap  書き込む値
-   */
+     *
+     * @param dev  MSI ケーパビリティを読み込む PCI デバイス
+     * @param cap_addr  MSI ケーパビリティレジスタのコンフィグレーション空間アドレス
+     * @param msi_cap  書き込む値
+     */
     void WriteMSICapability(const Device& dev, uint8_t cap_addr,
                             const MSICapability& msi_cap) {
         WriteConfReg(dev, cap_addr, msi_cap.header.data);

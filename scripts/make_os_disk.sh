@@ -16,8 +16,9 @@ readonly KERNEL_FILE_PATH=$BUILD_PATH/kernel/kernel.elf
 readonly MOUNT_POINT=./build/mnt
 
 if [[ -e $MOUNT_POINT ]]; then
+  sudo umount -l $MOUNT_POINT
   rm -rf $MOUNT_POINT
-  rm $DISK_FILE_PATH
+  rm $DISK_FILE_PATH || true
 fi
 
 # イメージファイル作成
@@ -44,5 +45,5 @@ sudo rsync -rltD $RESOURCE_PATH/ $MOUNT_POINT/res
 
 sudo ls -lr $MOUNT_POINT
 
-sudo umount $MOUNT_POINT
+sudo umount -l $MOUNT_POINT
 rm -r $MOUNT_POINT
