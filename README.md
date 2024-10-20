@@ -4,7 +4,7 @@
 
 # 開発環境
 
-- C++ 17
+- C++ 23
 - Windows 11 WSL2 Ubuntu 24.04
 - VSCode
 
