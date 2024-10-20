@@ -97,13 +97,6 @@
         - clang++
         - clang-cpp
 
-    - name: configure display variable if WSL1
-      lineinfile:
-        path: "{{ ansible_env.HOME }}/.profile"
-        regexp: "^export DISPLAY="
-        line: "export DISPLAY=:0"
-      when: "'DISPLAY' not in ansible_env and 'WSLENV' in ansible_env and 'WSL_INTEROP' not in ansible_env"
-
     - name: configure display variable if WSL2
       lineinfile:
         path: "{{ ansible_env.HOME }}/.profile"
