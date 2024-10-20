@@ -23,6 +23,8 @@
           - cmake
           - ninja-build
           - gnupg
+          - automake
+          - libtool
         state: latest
         install_recommends: no
 

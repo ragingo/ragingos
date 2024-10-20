@@ -1,7 +1,6 @@
 #!/bin/bash -eux
 
 export EDK2_HOME=$(realpath -m ./lib/edk2)
-export STD_LIB_DIR=$(realpath -m ./lib/osbook/devenv/x86_64-elf)
 export EFI_FILE_PATH=$EDK2_HOME/Build/RagingosLoaderX64/DEBUG_CLANG38/X64/Loader.efi
 
 if [ ! -d $EDK2_HOME ]; then
@@ -21,15 +20,6 @@ if [ ! -d $EDK2_HOME ]; then
   popd
 fi
 
-if [ ! -d $STD_LIB_DIR ]; then
-  echo "$STD_LIB_DIR が存在しません。"
-  echo "ファイルをダウンロードして展開します。"
-  mkdir -p $(dirname $STD_LIB_DIR)
-  curl -L -o /tmp/x86_64-elf.tar.gz https://github.com/uchan-nos/mikanos-build/releases/download/v2.0/x86_64-elf.tar.gz
-  tar -xzf /tmp/x86_64-elf.tar.gz -C $(dirname $STD_LIB_DIR)
-  echo "ダウンロードと展開が完了しました。"
-fi
-
 export CC=clang
 export CXX=clang++
 export LD=ld.lld
@@ -38,12 +28,13 @@ export AS=nasm
 export NEWLIB_DIR=$(realpath -m ./lib/newlib_build/x86_64-elf)
 export CXX_ABI_DIR=$(realpath -m ./lib/llvm_libcxxabi_build)
 export CXX_DIR=$(realpath -m ./lib/llvm_libcxx_build)
+export FREETYPE_DIR=$(realpath -m ./lib/freetype_build)
 
 export CPPFLAGS="\
   -I$CXX_ABI_DIR/include/c++/v1 \
   -I$CXX_DIR/include/c++/v1 \
   -I$NEWLIB_DIR/include \
-  -I$STD_LIB_DIR/include/freetype2 \
+  -I$FREETYPE_DIR/include/freetype2 \
   -I$EDK2_HOME/MdePkg/Include \
   -I$EDK2_HOME/MdePkg/Include/X64 \
   -nostdlibinc \
@@ -58,5 +49,5 @@ export LDFLAGS="\
   -L$CXX_ABI_DIR/lib \
   -L$CXX_DIR/lib \
   -L$NEWLIB_DIR/lib \
-  -L$STD_LIB_DIR/lib\
+  -L$FREETYPE_DIR/lib\
 "
