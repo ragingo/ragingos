@@ -36,6 +36,7 @@ enum class MemoryType {
     kEfiMemoryMappedIOPortSpace,
     kEfiPalCode,
     kEfiPersistentMemory,
+    kEfiUnacceptedMemoryType,
     kEfiMaxMemoryType
 };
 
