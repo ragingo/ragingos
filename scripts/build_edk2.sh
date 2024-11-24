@@ -24,12 +24,16 @@ fi
 cp -p ./setup/edk2/tools_def.txt $EDK2_HOME/Conf/tools_def.txt
 
 # OvmfPkg のビルド
-cp -p ./setup/edk2/target_OvmfPkg.txt $EDK2_HOME/Conf/target.txt
+# cp -p ./setup/edk2/target_OvmfPkg.txt $EDK2_HOME/Conf/target.txt
 
-pushd $EDK2_HOME
-source ./edksetup.sh
-build
-popd
+# pushd $EDK2_HOME
+# source ./edksetup.sh
+# build
+# popd
+
+# pushd $EDK2_HOME
+# ./OvmfPkg/build.sh -a X64 -b DEBUG -t GCC5 -D FD_SIZE_4MB
+# popd
 
 # RagingosLoaderPkg のビルド
 ln -fs $(realpath ./src/RagingosLoaderPkg) $EDK2_HOME/
