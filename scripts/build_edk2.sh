@@ -7,7 +7,7 @@ if [ ! -d $EDK2_HOME ]; then
   git clone --depth=1 https://github.com/tianocore/edk2.git $EDK2_HOME
   pushd $EDK2_HOME
   git fetch --depth=1 --tags
-  git checkout tags/edk2-stable202408
+  git checkout tags/edk2-stable202411
   # BaseTools/Source/C ビルド用
   git submodule update --init --depth=1 BaseTools/Source/C/BrotliCompress/brotli
   # RagingosLoaderPkg ビルド用
