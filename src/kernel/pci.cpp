@@ -270,8 +270,15 @@ namespace pci {
         }
 
         const auto bar_upper = ReadConfReg(device, addr + 4);
+        const auto lo = static_cast<uint64_t>(bar);
+        const auto hi = static_cast<uint64_t>(bar_upper);
+        const auto ret = lo | (hi << 32);
+        Log(kDebug, "xHCI bus: 0x%llx, device: 0x%llx, function: 0x%llx\n", device.bus, device.device, device.function);
+        Log(kDebug, "xHCI BAR0 lo  : 0x%llx\n", lo);
+        Log(kDebug, "xHCI BAR0 hi  : 0x%llx\n", hi);
+        Log(kDebug, "xHCI BAR0 ret : 0x%llx\n", ret);
         return {
-            bar | (static_cast<uint64_t>(bar_upper) << 32),
+            ret,
             MAKE_ERROR(Error::kSuccess)
         };
     }

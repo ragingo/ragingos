@@ -126,7 +126,7 @@ extern "C" void KernelMainNewStack(
     InitializeConsole();
 
     printk("Welcome to ragingos!\n");
-    SetLogLevel(kWarn);
+    SetLogLevel(kDebug);
 
     InitializeSegmentation();
     InitializePaging();
