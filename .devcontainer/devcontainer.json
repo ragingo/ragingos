@@ -1,0 +1,33 @@
+{
+  "name": "ragingos",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt",
+    "seccomp=unconfined"
+  ],
+  "remoteUser": "root",
+  "postCreateCommand": "bash -c './scripts/build_edk2.sh && ./scripts/build_newlib.sh && ./scripts/build_libcxx.sh && ./scripts/build_freetype.sh'",
+  "forwardPorts": [5900],
+  "portsAttributes": {
+    "5900": {
+      "label": "QEMU VNC",
+      "onAutoForward": "ignore"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.hexeditor",
+        "llvm-vs-code-extensions.lldb-dap"
+      ]
+    }
+  }
+}
