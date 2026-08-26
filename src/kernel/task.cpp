@@ -1,5 +1,7 @@
 #include "task.hpp"
 
+#include <algorithm>
+#include <memory.h>
 #include "asmfunc.h"
 #include "segment.hpp"
 #include "timer.hpp"

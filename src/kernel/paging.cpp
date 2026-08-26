@@ -1,6 +1,7 @@
 #include "paging.hpp"
 
 #include <array>
+#include <memory.h>
 
 #include "asmfunc.h"
 #include "memory_manager.hpp"

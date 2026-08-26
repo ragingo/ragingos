@@ -62,3 +62,8 @@ int isatty(int fd) {
     errno = EBADF;
     return -1;
 }
+
+int fcntl(int fd, int cmd, ...) {
+    errno = EBADF;
+    return -1;
+}

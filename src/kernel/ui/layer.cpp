@@ -1,6 +1,7 @@
 #include "ui/layer.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include "ui/console.hpp"
 #include "logger.hpp"
 #include "task.hpp"

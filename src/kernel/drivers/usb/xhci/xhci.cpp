@@ -1,6 +1,8 @@
 #include "drivers/usb/xhci/xhci.hpp"
 
+#include <algorithm>
 #include <cstring>
+#include <cstdlib>
 #include "logger.hpp"
 #include "pci.hpp"
 #include "interrupt.hpp"
