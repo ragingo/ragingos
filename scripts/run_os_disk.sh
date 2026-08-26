@@ -32,6 +32,7 @@ qemu-system-x86_64 \
   -device usb-mouse \
   -device usb-kbd \
   -device usb-tablet \
+  -display none -vnc 0.0.0.0:0 \
   -monitor stdio \
   --no-reboot \
   --no-shutdown \
