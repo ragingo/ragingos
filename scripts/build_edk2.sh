@@ -17,7 +17,7 @@ if [ ! -d $EDK2_HOME ]; then
   git submodule update --init --depth=1 CryptoPkg/Library/OpensslLib/openssl
   git submodule update --init --depth=1 CryptoPkg/Library/MbedTlsLib/mbedtls
   git submodule update --init --depth=1 SecurityPkg/DeviceSecurity/SpdmLib/libspdm
-  make -C BaseTools/Source/C
+  make -C BaseTools/Source/C CC="gcc -std=gnu11 -Wno-error" -j
   popd
 fi
 
