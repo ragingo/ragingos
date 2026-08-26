@@ -25,7 +25,7 @@ pushd newlib_build
   --disable-multilib \
   --disable-newlib-multithread
 
-make -j$(nproc)
+make -j
 make install
 
 popd

@@ -5,5 +5,5 @@ source ./scripts/buildenv.sh
 mkdir -p ./build/kernel
 
 pushd ./src/kernel
-make
+make -j
 popd

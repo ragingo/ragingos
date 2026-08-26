@@ -8,5 +8,5 @@ for makefile in $(ls $APPS_PATH/*/Makefile)
 do
   APP_DIR=$(dirname $makefile)
   APP=$(basename $APP_DIR)
-  make ${MAKE_OPTS:-} -C $APP_DIR
+  make ${MAKE_OPTS:-} -C $APP_DIR -j
 done
