@@ -33,6 +33,10 @@ setup:
 	mkdir -p $(TARGET_DIR)/drivers/usb/xhci
 	mkdir -p $(TARGET_DIR)/ui
 
+.PHONY: clean
+clean:
+	rm -rf $(TARGET_DIR)
+
 $(TARGET): $(OBJS) Makefile
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm -lfreetype 2>&1 | tee -a $(BUILD_LOG_LD)
 
