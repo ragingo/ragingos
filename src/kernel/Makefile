@@ -40,7 +40,7 @@ clean:
 $(TARGET): $(OBJS) Makefile
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) -lc -lc++ -lc++abi -lm -lfreetype 2>&1 | tee -a $(BUILD_LOG_LD)
 
-$(TARGET_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
+$(TARGET_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile | setup
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ 2>&1 | tee -a $(BUILD_LOG_CXX)
 
 $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.cpp
@@ -48,7 +48,7 @@ $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.cpp
 	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRC_DIR)/%.cpp,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 
-$(TARGET_DIR)/%.o: $(SRC_DIR)/%.c Makefile
+$(TARGET_DIR)/%.o: $(SRC_DIR)/%.c Makefile | setup
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ 2>&1 | tee -a $(BUILD_LOG_CC)
 
 $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.c
@@ -56,13 +56,13 @@ $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.c
 	$(eval OBJ = $(TARGET_DIR)/$(patsubst $(SRC_DIR)/%.c,%.o,$<))
 	sed --in-place 's|$(notdir $(OBJ))|$(OBJ)|' $@
 
-$(TARGET_DIR)/%.o: $(SRC_DIR)/%.asm Makefile
+$(TARGET_DIR)/%.o: $(SRC_DIR)/%.asm Makefile | setup
 	$(AS) -f elf64 -o $@ $<
 
 HANKAKU_BIN = $(TARGET_DIR)/hankaku.bin
 HANKAKU_O = $(TARGET_DIR)/hankaku.o
 
-$(HANKAKU_BIN): $(SRC_DIR)/hankaku.txt
+$(HANKAKU_BIN): $(SRC_DIR)/hankaku.txt | setup
 	../../tools/makefont.py -o $(HANKAKU_BIN) $(SRC_DIR)/hankaku.txt
 
 $(HANKAKU_O): $(HANKAKU_BIN)
