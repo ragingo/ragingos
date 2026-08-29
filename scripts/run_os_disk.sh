@@ -36,4 +36,5 @@ qemu-system-x86_64 \
   -monitor stdio \
   --no-reboot \
   --no-shutdown \
+  -audiodev none,id=noaudio \
   $QEMU_OPTS
