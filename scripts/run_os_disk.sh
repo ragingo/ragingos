@@ -11,7 +11,8 @@ cp /usr/share/ovmf/OVMF.fd OVMF_Ubuntu26-apt.fd
 popd > /dev/null
 
 # FIRMWARE=""
-FIRMWARE="-bios $OUTPUT_PATH/OVMF_Ubuntu26-apt.fd"
+# FIRMWARE="-bios $OUTPUT_PATH/OVMF_Ubuntu26-apt.fd"
+FIRMWARE="-bios $OUTPUT_PATH/OVMF_SELF_BUILD.fd"
 
 QEMU_OPTS=""
 # QEMU_OPTS="-gdb tcp::12345 -S"
