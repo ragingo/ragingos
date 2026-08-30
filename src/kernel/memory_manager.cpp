@@ -111,6 +111,9 @@ void InitializeMemoryManager(const MemoryMap& memory_map) {
          iter < memory_map_base + memory_map.map_size;
          iter += memory_map.descriptor_size) {
         auto desc = reinterpret_cast<const MemoryDescriptor*>(iter);
+        if (desc->physical_start >= BitmapMemoryManager::kFrameCount * kBytesPerFrame) {
+            continue;
+        }
         if (available_end < desc->physical_start) {
             memory_manager->MarkAllocated(
                 FrameID { available_end / kBytesPerFrame },
