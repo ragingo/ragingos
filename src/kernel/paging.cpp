@@ -16,6 +16,9 @@ namespace {
 
     alignas(kPageSize4K) std::array<uint64_t, 512> pml4_table;
     alignas(kPageSize4K) std::array<uint64_t, 512> pdp_table;
+    alignas(kPageSize4K) std::array<uint64_t, 512> pdp_table_high;
+    alignas(kPageSize4K) std::array<uint64_t, 512> page_directory_high;
+
     alignas(kPageSize4K)
         std::array<std::array<uint64_t, 512>, kPageDirectoryCount> page_directory;
 }  // namespace
@@ -28,6 +31,16 @@ void SetupIdentityPageTable() {
             page_directory[i_pdpt][i_pd] = i_pdpt * kPageSize1G + i_pd * kPageSize2M | 0x083;
         }
     }
+
+    // 0xc000000000 をidentity mapするためのページテーブル
+    //
+    // 0xc000000000
+    //   PML4 = 1
+    //   PDPT = 256
+    //   PD   = 0
+    pml4_table[1] = reinterpret_cast<uint64_t>(&pdp_table_high[0]) | 0x003;
+    pdp_table_high[256] = reinterpret_cast<uint64_t>(&page_directory_high[0]) | 0x003;
+    page_directory_high[0] = 0xc000000000ULL | 0x083;
 
     ResetCR3();
     SetCR0(GetCR0() & 0xfffeffff);  // Clear WP
