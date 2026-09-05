@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 .PHONY: all
-all: build_edk2 build_kernel build_apps make_os_disk make_data_disk run_os_disk
+all: build_edk2 build_freetype build_kernel build_apps make_os_disk make_data_disk run_os_disk
 
 .PHONY: clean
 clean: clean_kernel clean_apps
@@ -25,6 +25,10 @@ build_stdlib:
 .PHONY: build_edk2
 build_edk2:
 	./scripts/build_edk2.sh
+
+.PHONY: build_freetype
+build_freetype:
+	./scripts/build_freetype.sh
 
 .PHONY: make_os_disk
 make_os_disk:
