@@ -4,10 +4,8 @@ EDK2_HOME=$(realpath -m ./lib/edk2)
 
 if [ ! -d $EDK2_HOME ]; then
   mkdir -p $EDK2_HOME
-  git clone --depth=1 https://github.com/tianocore/edk2.git $EDK2_HOME
+  git clone --depth=1 --branch edk2-stable202608 --single-branch --no-tags https://github.com/tianocore/edk2.git $EDK2_HOME
   pushd $EDK2_HOME
-  git fetch --depth=1 --tags
-  git checkout tags/edk2-stable202411
   # BaseTools/Source/C ビルド用
   git submodule update --init --depth=1 BaseTools/Source/C/BrotliCompress/brotli
   # RagingosLoaderPkg ビルド用
@@ -24,16 +22,20 @@ fi
 cp -p ./setup/edk2/tools_def.txt $EDK2_HOME/Conf/tools_def.txt
 
 # OvmfPkg のビルド
-# cp -p ./setup/edk2/target_OvmfPkg.txt $EDK2_HOME/Conf/target.txt
+OVMF_OUTPUT=$EDK2_HOME/Build/OvmfX64/DEBUG_CLANG38/FV/OVMF.fd
 
-# pushd $EDK2_HOME
-# source ./edksetup.sh
-# build
-# popd
+if [ ! -f $OVMF_OUTPUT ]; then
+  cp -p ./setup/edk2/target_OvmfPkg.txt $EDK2_HOME/Conf/target.txt
 
-# pushd $EDK2_HOME
-# ./OvmfPkg/build.sh -a X64 -b DEBUG -t CLANG38 -D FD_SIZE_4MB
-# popd
+  pushd $EDK2_HOME
+  source ./edksetup.sh
+  build
+  popd
+
+  pushd $EDK2_HOME
+  ./OvmfPkg/build.sh -a X64 -b DEBUG -t CLANG38 -D FD_SIZE_4MB
+  popd
+fi
 
 # RagingosLoaderPkg のビルド
 ln -fs $(realpath ./src/RagingosLoaderPkg) $EDK2_HOME/
