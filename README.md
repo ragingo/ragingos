@@ -5,7 +5,8 @@
 # 開発環境
 
 - C++ 23
-- Windows 11 WSL2 Ubuntu 24.04
+- macOS (Apple Silicon)
+- Docker Ubuntu 26.04
 - VSCode
 
 # ツール
