@@ -1,8 +1,13 @@
+# syntax=docker/dockerfile:1
+
 FROM ubuntu:26.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y \
     build-essential \
     mold \
     gcc-x86-64-linux-gnu g++-x86-64-linux-gnu libc6-dev-amd64-cross \
@@ -12,8 +17,7 @@ RUN apt-get update && apt-get install -y \
     qemu-system-x86 qemu-utils \
     dosfstools mtools \
     lsb-release software-properties-common gnupg2 \
-    gdb rsync unzip ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    gdb rsync unzip ca-certificates
 
 # NASMはaptの3.01系がEDK2のUefiCpuPkg等と非互換のため、
 # ソースから2.16.03（EDK2で広く使われている安定版）をビルドして固定する
