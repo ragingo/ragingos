@@ -5,8 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/src/**",
                 "./lib/edk2/MdePkg/**",
-                "./lib/llvm_libcxxabi_build/include/c++/v1",
-                "./lib/llvm_libcxx_build/include/c++/v1",
+                "./lib/llvm_runtimes_build/include/c++/v1",
                 "./lib/newlib_build/x86_64-elf/include/**"
             ],
             "defines": [],
