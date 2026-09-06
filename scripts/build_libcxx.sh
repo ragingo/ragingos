@@ -10,7 +10,7 @@ LLVM_TAG=llvmorg-$LLVM_VERSION
 
 CC=clang
 CXX=clang++
-LD=ld.lld
+LD=mold
 TARGET_TRIPLE=x86_64-elf
 NEWLIB_INCLUDES="$(realpath ./lib/newlib_build/$TARGET_TRIPLE/include)"
 

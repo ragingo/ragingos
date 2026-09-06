@@ -3,6 +3,7 @@
 FREETYPE_TAG=VER-2-13-3
 
 TARGET_TRIPLE=x86_64-elf
+LD=mold
 NEWLIB_INCLUDES="$(realpath ./lib/newlib_build/$TARGET_TRIPLE/include)"
 # aarch64 Linux (Docker on macOS) では clang --target=x86_64-elf が
 # host gcc (aarch64) に -m64 を渡してリンクが失敗するため、configure の
@@ -69,6 +70,7 @@ pushd freetype_build
 
 ../freetype/configure \
   CC="$CC" \
+  LD="$LD" \
   CFLAGS="-I$NEWLIB_INCLUDES $CFLAGS" \
   --host=$FREETYPE_HOST_TRIPLE \
   --prefix=$(pwd)

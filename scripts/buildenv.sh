@@ -2,7 +2,7 @@
 
 export CC=clang
 export CXX=clang++
-export LD=ld.lld
+export LD=mold
 export AS=nasm
 
 export EDK2_HOME=$(realpath -m ./lib/edk2)
