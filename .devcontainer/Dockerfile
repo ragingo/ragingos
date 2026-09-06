@@ -17,7 +17,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     qemu-system-x86 qemu-utils \
     dosfstools mtools \
     lsb-release software-properties-common gnupg2 \
-    gdb rsync unzip ca-certificates
+    gdb rsync unzip ca-certificates \
+    ripgrep
 
 # NASMはaptの3.01系がEDK2のUefiCpuPkg等と非互換のため、
 # ソースから2.16.03（EDK2で広く使われている安定版）をビルドして固定する
