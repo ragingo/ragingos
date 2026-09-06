@@ -16,8 +16,10 @@ if [ "$(uname -m)" = "aarch64" ] && [ "$(uname -s)" = "Linux" ]; then
 fi
 
 pushd ./lib
-rm -rf ./freetype ./freetype_build
-git clone --depth=1 -b $FREETYPE_TAG https://github.com/freetype/freetype.git
+rm -rf ./freetype_build
+if [ ! -d ./freetype ]; then
+  git clone --depth=1 -b $FREETYPE_TAG https://github.com/freetype/freetype.git
+fi
 
 pushd freetype
 ./autogen.sh
