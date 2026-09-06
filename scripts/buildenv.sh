@@ -23,6 +23,7 @@ export CPPFLAGS="\
   -D_LDBL_EQ_DBL \
   -D_POSIX_TIMERS \
   -D_LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE \
+  -D_LIBCPP_NO_ABI_TAG \
   -DEFIAPI='__attribute__((ms_abi))'\
  "
 
