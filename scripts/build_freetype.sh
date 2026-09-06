@@ -5,7 +5,7 @@ FREETYPE_TAG=VER-2-13-3
 TARGET_TRIPLE=x86_64-elf
 LD=mold
 NEWLIB_INCLUDES="$(realpath ./lib/newlib_build/$TARGET_TRIPLE/include)"
-CFLAGS="-I$NEWLIB_INCLUDES -nostdlibinc -O2 -D__ELF__ -D_LDBL_EQ_DBL -U_GNU_SOURCE -D_POSIX_TIMERS -fPIC -U__XSI_VISIBLE --target=$TARGET_TRIPLE"
+CFLAGS="-I$NEWLIB_INCLUDES -nostdlibinc -O2 -D__ELF__ -D_LDBL_EQ_DBL -U_GNU_SOURCE -D_POSIX_TIMERS -fPIC -U__XSI_VISIBLE --target=$TARGET_TRIPLE -Wno-keyword-macro -Wno-gnu-include-next"
 CC=clang
 
 # aarch64 Linux (Docker on macOS) では clang --target=x86_64-elf が
