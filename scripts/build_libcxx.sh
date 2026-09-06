@@ -1,12 +1,11 @@
 #!/bin/bash -eux
 
 # BUILD_MODE
-# - CLONE_AND_BUILD
 # - CLEAN_BUILD
 # - INCREMENTAL_BUILD
 BUILD_MODE=CLEAN_BUILD
 
-LLVM_VERSION=22.1.8
+LLVM_VERSION=23.1.0
 LLVM_TAG=llvmorg-$LLVM_VERSION
 
 CC=clang
@@ -16,13 +15,10 @@ TARGET_TRIPLE=x86_64-elf
 NEWLIB_INCLUDES="$(realpath ./lib/newlib_build/$TARGET_TRIPLE/include)"
 
 pushd ./lib
+mkdir -p llvm_runtimes_build
 
-if [ "$BUILD_MODE" == "CLONE_AND_BUILD" ]; then
-  rm -rf ./llvm
-  rm -rf ./llvm_runtimes_build
+if [ ! -d ./llvm ]; then
   git clone --depth=1 -b $LLVM_TAG https://github.com/llvm/llvm-project.git llvm
-
-  mkdir -p llvm_runtimes_build
 fi
 
 CXX_FLAGS="\
@@ -33,6 +29,7 @@ CXX_FLAGS="\
   -D_LDBL_EQ_DBL \
   -D_POSIX_TIMERS \
   -D_LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE \
+  -D_LIBCPP_NO_ABI_TAG \
   -mcmodel=large \
 "
 
