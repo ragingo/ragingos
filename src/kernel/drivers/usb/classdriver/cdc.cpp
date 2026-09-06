@@ -43,7 +43,8 @@ namespace usb::cdc {
     }
 
     Error CDCDriver::OnNormalCompleted(EndpointID ep_id, const void* buf, int len) {
-        Log(kDebug, "CDCDriver::OnNormalCompleted: buf='%.*s'\n", len, buf);
+        Log(kDebug, "CDCDriver::OnNormalCompleted: buf='%.*s'\n", len,
+            static_cast<const char*>(buf));
         auto buf8 = reinterpret_cast<const uint8_t*>(buf);
         if (ep_id == ep_bulk_in_) {
             std::copy_n(buf8, len, std::back_inserter(receive_buf_));

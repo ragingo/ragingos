@@ -35,8 +35,8 @@ namespace {
             return MAKE_ERROR(Error::kFreeTypeError);
         }
 
-        if (int err = FT_Load_Glyph(face, glyph_index,
-                                    FT_LOAD_RENDER | FT_LOAD_TARGET_MONO)) {
+        if (FT_Load_Glyph(face, glyph_index,
+                  FT_LOAD_RENDER | FT_LOAD_TARGET_MONO)) {
             return MAKE_ERROR(Error::kFreeTypeError);
         }
         return MAKE_ERROR(Error::kSuccess);
@@ -124,11 +124,11 @@ WithError<FT_Face> NewFTFace() {
     }
 
     FT_Face face;
-    if (int err = FT_New_Memory_Face(
+        if (FT_New_Memory_Face(
             ft_library, nihongo_buf->data(), nihongo_buf->size(), 0, &face)) {
         return { face, MAKE_ERROR(Error::kFreeTypeError) };
     }
-    if (int err = FT_Set_Pixel_Sizes(face, 16, 16)) {
+    if (FT_Set_Pixel_Sizes(face, 16, 16)) {
         return { face, MAKE_ERROR(Error::kFreeTypeError) };
     }
     return { face, MAKE_ERROR(Error::kSuccess) };
@@ -179,7 +179,7 @@ Error WriteUnicode(PixelWriter& writer, Vector2D<int> pos,
 }
 
 void InitializeFont() {
-    if (int err = FT_Init_FreeType(&ft_library)) {
+    if (FT_Init_FreeType(&ft_library)) {
         Log(kError, "failed to initialize FreeType library\n");
         exit(1);
     }

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <cctype>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -255,12 +256,13 @@ namespace fat {
                 return { nullptr, MAKE_ERROR(Error::kIsDirectory) };
             }
 
-            char parent_dir_name[slash_pos - path + 1];
-            strncpy(parent_dir_name, path, slash_pos - path);
-            parent_dir_name[slash_pos - path] = '\0';
+            const auto parent_dir_name_size = static_cast<size_t>(slash_pos - path + 1);
+            std::vector<char> parent_dir_name(parent_dir_name_size);
+            strncpy(parent_dir_name.data(), path, parent_dir_name_size - 1);
+            parent_dir_name[parent_dir_name_size - 1] = '\0';
 
             if (parent_dir_name[0] != '\0') {
-                auto [parent_dir, post_slash2] = fat::FindFile(parent_dir_name);
+                auto [parent_dir, post_slash2] = fat::FindFile(parent_dir_name.data());
                 if (parent_dir == nullptr) {
                     return { nullptr, MAKE_ERROR(Error::kNoSuchEntry) };
                 }

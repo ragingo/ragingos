@@ -256,7 +256,7 @@ namespace usb::xhci {
             data_stage_buffer = data_stage_trb->Pointer();
             transfer_length =
                 data_stage_trb->bits.trb_transfer_length - residual_length;
-        } else if (auto status_stage_trb = TRBDynamicCast<StatusStageTRB>(issuer_trb)) {
+        } else if (TRBDynamicCast<StatusStageTRB>(issuer_trb)) {
             // pass
         } else {
             return MAKE_ERROR(Error::kNotImplemented);

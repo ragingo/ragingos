@@ -14,7 +14,8 @@ DEPENDS = $(OBJS:.o=.d)
 CPPFLAGS += -I.
 CFLAGS   += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone -fshort-wchar
 CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone -fshort-wchar \
-            -fno-exceptions -fno-rtti -std=c++23
+            -fno-exceptions -fno-rtti -std=c++23 \
+            -Wno-packed-non-pod
 LDFLAGS  += --entry KernelMain -z norelro --image-base 0x100000 --static
 
 BUILD_LOG_CC := $(TARGET_DIR)/build-report_$(CC).log
@@ -42,6 +43,8 @@ $(TARGET): $(OBJS) Makefile
 
 $(TARGET_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile | setup
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ 2>&1 | tee -a $(BUILD_LOG_CXX)
+
+$(TARGET_DIR)/interrupt.o: CXXFLAGS += -Wno-excessive-regsave
 
 $(TARGET_DIR)/.%.d: $(SRC_DIR)/%.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@

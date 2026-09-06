@@ -162,8 +162,6 @@ extern "C" void KernelMainNewStack(
         .InitContext(TaskWallclock, 0)
         .Wakeup();
 
-    char str[128];
-
     while (true) {
         native_irq_disable();
         auto msg = main_task.ReceiveMessage();

@@ -57,7 +57,7 @@ void TimerManager::AddTimer(const Timer& timer) {
 }
 
 bool TimerManager::Tick() {
-    ++tick_;
+    tick_ += 1;
 
     bool task_timer_timeout = false;
     while (true) {
